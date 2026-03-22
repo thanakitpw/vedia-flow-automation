@@ -272,6 +272,10 @@ const TabVideoGen = {
       noText: document.getElementById('vg-no-text')?.checked || false,
       randomCamera: document.getElementById('vg-camera-angle')?.value === 'auto',
       cameraAngle: document.getElementById('vg-camera-angle')?.value,
+      aspectRatio: document.getElementById('vg-aspect-ratio')?.value || '9:16',
+      imageStyle: document.getElementById('vg-image-style')?.value || 'product_showcase',
+      videoStyle: document.getElementById('vg-video-style')?.value || 'talk_ugc',
+      videoWaitTime: videoWait,
       isChannelMode: false,
     };
 
