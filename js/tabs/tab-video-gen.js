@@ -25,7 +25,7 @@ const TabVideoGen = {
     document.getElementById('btn-stop-flow')?.addEventListener('click', () => this.stopFlow());
 
     // ปุ่มทดสอบ
-    for (let i = 1; i <= 16; i++) {
+    for (let i = 1; i <= 17; i++) {
       document.getElementById(`btn-t${i}`)?.addEventListener('click', () => this.runTestStep(i));
     }
 
@@ -419,6 +419,7 @@ const TabVideoGen = {
         case 14: await this._t14_fillCaption(); break;
         case 15: await this._t15_addCart(row); break;
         case 16: await this._t16_aiFlag(); break;
+        case 17: await this._t17_post(); break;
       }
     } catch (err) {
       Logger.addLog(`🧪 ❌ Step ${step} Error: ${err.message}`, 'error');
@@ -635,7 +636,7 @@ const TabVideoGen = {
   async _t14_fillCaption() {
     Logger.addLog('🧪 [14] ใส่ Caption...', 'info');
     const tabId = await this._getTikTokTab();
-    const caption = this._testCaption || '🔥 สินค้าดี ต้องลอง! กดตะกร้าเลย\n#สินค้าดี #tiktokshop';
+    const caption = this._testCaption || '🔥 ใครยังไม่ได้ลองตัวนี้ พลาดมากค่ะ!\n✨ ใช้มาหลายตัว ตัวนี้ดีที่สุดเลย คุณภาพดี ราคาคุ้มมากๆ\n💯 รีวิวจากคนใช้จริง ไม่ได้มาพูดเล่นๆ นะ\n🛒 กดตะกร้าสีเหลืองเลยค่ะ ของมีจำนวนจำกัด!\n#tiktokshop #ของดีบอกต่อ #สินค้าขายดี #รีวิวจริง #ของมันต้องมี';
     await TikTokPoster.fillCaption(tabId, caption);
     Logger.addLog(`🧪 ✅ ใส่ Caption สำเร็จ!`, 'success');
     showToast('ใส่ Caption สำเร็จ!', 'success');
@@ -649,6 +650,21 @@ const TabVideoGen = {
     await TikTokPoster.addProductLink(tabId, name);
     Logger.addLog(`🧪 ✅ กดปุ่มปักตะกร้า: "${name}"`, 'success');
     showToast('กดปุ่มปักตะกร้าแล้ว!', 'success');
+  },
+
+  // 17. กด Post
+  async _t17_post() {
+    Logger.addLog('🧪 [17] กด Post...', 'info');
+    const tabId = await this._getTikTokTab();
+    const result = await TikTokPoster.clickPost(tabId);
+    const data = result?.[0]?.result;
+    if (data?.success) {
+      Logger.addLog('🧪 ✅ กด Post สำเร็จ! 🚀', 'success');
+      showToast('กด Post สำเร็จ!', 'success');
+    } else {
+      Logger.addLog(`🧪 ❌ ${data?.error || 'กด Post ไม่สำเร็จ'}`, 'error');
+      showToast(data?.error || 'กด Post ไม่สำเร็จ', 'error');
+    }
   },
 
   // 16. ติ๊ก AI-generated

@@ -2,15 +2,19 @@
 // โพสต์วิดีโอขึ้น TikTok Studio อัตโนมัติ พร้อมปักตะกร้า
 
 const TikTokPoster = {
-  // หา TikTok Studio tab หรือเปิดใหม่
+  // หา TikTok Studio tab หรือเปิดใหม่ + focus ไปที่ tab นั้น
   async getTikTokTab() {
     const tabs = await chrome.tabs.query({ url: '*://*.tiktok.com/*' });
     const studioTab = tabs.find(t => t.url.includes('tiktokstudio'));
-    if (studioTab) return studioTab;
 
-    // เปิด tab ใหม่
+    if (studioTab) {
+      // มี tab อยู่แล้ว → focus ไปที่ tab นั้น
+      await chrome.tabs.update(studioTab.id, { active: true });
+      return studioTab;
+    }
+
+    // เปิด tab ใหม่ (จะ active อัตโนมัติ)
     const newTab = await chrome.tabs.create({ url: 'https://www.tiktok.com/tiktokstudio/upload' });
-    // รอโหลด
     await DOMHelpers.sleep(5000);
     return newTab;
   },
@@ -135,108 +139,273 @@ const TikTokPoster = {
     });
   },
 
-  // ใส่ Caption
+  // ใส่ Caption (TikTok ใช้ Draft.js - ใช้ clipboard paste เหมือนคนจริง)
   async fillCaption(tabId, caption) {
     return chrome.scripting.executeScript({
       target: { tabId },
       func: (text) => {
-        const editors = document.querySelectorAll('[contenteditable="true"]');
-        let captionEditor = null;
+        return new Promise(async (resolve) => {
+          const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-        for (const editor of editors) {
-          const rect = editor.getBoundingClientRect();
-          if (rect.width > 100 && rect.height > 30) {
-            captionEditor = editor;
-            break;
+          // หา Draft.js editor
+          let editor = document.querySelector('.public-DraftEditor-content');
+          if (!editor) editor = document.querySelector('[class*="DraftEditor-content"]');
+          if (!editor) editor = document.querySelector('[class*="caption-editor"] [contenteditable="true"]');
+          if (!editor) {
+            const editables = document.querySelectorAll('[contenteditable="true"]');
+            for (const el of editables) {
+              if (el.getBoundingClientRect().width > 200) { editor = el; break; }
+            }
           }
-        }
 
-        if (!captionEditor) {
-          // Fallback: textarea
-          const textarea = document.querySelector('textarea[placeholder*="caption"], textarea[placeholder*="คำอธิบาย"]');
-          if (textarea) {
-            textarea.value = text;
-            textarea.dispatchEvent(new Event('input', { bubbles: true }));
-            return { success: true };
+          if (!editor) return resolve({ success: false, error: 'ไม่พบช่อง caption' });
+
+          // คลิกที่ editor เพื่อ focus
+          editor.click();
+          await sleep(500);
+
+          // ใช้ clipboard API + paste event (เหมือน Ctrl+V)
+          try {
+            await navigator.clipboard.writeText(text);
+            await sleep(200);
+            document.execCommand('paste');
+            await sleep(500);
+
+            if (editor.textContent.includes(text.substring(0, 10))) {
+              return resolve({ success: true, method: 'clipboard+paste' });
+            }
+          } catch (e) {
+            // clipboard API อาจไม่ได้ permission
           }
-          return { success: false, error: 'ไม่พบช่อง caption' };
-        }
 
-        captionEditor.focus();
-        document.execCommand('selectAll');
-        document.execCommand('delete');
-        document.execCommand('insertText', false, text);
+          // Fallback: สร้าง paste event เอง
+          try {
+            const dt = new DataTransfer();
+            dt.setData('text/plain', text);
+            const pasteEvent = new ClipboardEvent('paste', {
+              clipboardData: dt,
+              bubbles: true,
+              cancelable: true,
+            });
+            editor.dispatchEvent(pasteEvent);
+            await sleep(500);
 
-        return { success: true };
+            if (editor.textContent.includes(text.substring(0, 10))) {
+              return resolve({ success: true, method: 'pasteEvent' });
+            }
+          } catch (e) {}
+
+          // Fallback 2: ใช้ execCommand insertText (อาจ crash)
+          try {
+            editor.focus();
+            document.execCommand('insertText', false, text);
+            await sleep(300);
+            return resolve({ success: true, method: 'insertText' });
+          } catch (e) {}
+
+          resolve({ success: false, error: 'ไม่สามารถใส่ caption ได้' });
+        });
       },
       args: [caption],
     });
   },
 
-  // ปักตะกร้า (Add Product Link) ← สำคัญมาก
+  // ปักตะกร้า (Add Product Link) - 4 ขั้นตอน
+  // 1. กด "+ Add" → 2. กด "Next" (Products) → 3. ค้นหา+เลือกสินค้า+กด Next → 4. กด "Add"
   async addProductLink(tabId, productName) {
     return chrome.scripting.executeScript({
       target: { tabId },
       func: (name) => {
-        // หาปุ่ม "เพิ่มสินค้า" / "Add product links"
-        const buttons = document.querySelectorAll('button, [role="button"], a');
-        let addBtn = null;
+        return new Promise(async (resolve) => {
+          const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-        const keywords = ['เพิ่มสินค้า', 'Add product', 'product link', 'สินค้า', 'Showcase'];
-        for (const btn of buttons) {
-          const text = btn.textContent;
-          if (keywords.some(k => text.includes(k))) {
-            const rect = btn.getBoundingClientRect();
-            if (rect.width > 0 && rect.height > 0) {
-              addBtn = btn;
-              break;
+          function findButton(texts) {
+            // หาจากท้ายสุด (ปุ่ม action มักอยู่ด้านล่าง)
+            const buttons = Array.from(document.querySelectorAll('button')).reverse();
+            for (const btn of buttons) {
+              const txt = btn.textContent.trim();
+              if (texts.some(t => txt === t || txt.includes(t)) && btn.offsetParent !== null && !btn.disabled) {
+                return btn;
+              }
             }
+            return null;
           }
-        }
 
-        if (!addBtn) return { success: false, error: 'ไม่พบปุ่มเพิ่มสินค้า' };
+          try {
+            // ===== Step 1: กดปุ่ม "+ Add" (ใต้ Add link) =====
+            const addLinkBtn = findButton(['+ Add', 'Add', 'เพิ่ม']);
+            if (!addLinkBtn) return resolve({ success: false, error: 'ไม่พบปุ่ม + Add', step: 1 });
 
-        // คลิกปุ่ม
-        addBtn.scrollIntoView({ behavior: 'instant', block: 'center' });
-        addBtn.click();
+            addLinkBtn.scrollIntoView({ behavior: 'instant', block: 'center' });
+            addLinkBtn.click();
+            await sleep(2000);
 
-        // รอ dialog เปิด แล้วพิมพ์ชื่อสินค้า
-        setTimeout(() => {
-          const searchInput = document.querySelector('input[placeholder*="ค้นหา"], input[placeholder*="search"], input[placeholder*="สินค้า"]');
-          if (searchInput) {
-            searchInput.value = name;
-            searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+            // ===== Step 2: กด "Next" (Link type: Products) =====
+            const nextBtn1 = findButton(['Next', 'ถัดไป']);
+            if (!nextBtn1) return resolve({ success: false, error: 'ไม่พบปุ่ม Next (step 2)', step: 2 });
+
+            nextBtn1.click();
+            await sleep(3000);
+
+            // ===== Step 3: ค้นหาสินค้า + เลือก + กด Next =====
+            // หาช่อง search (TikTok ใช้ TUXTextInputCore-input)
+            let searchInput = document.querySelector('.TUXTextInputCore-input');
+            if (!searchInput) searchInput = document.querySelector('input[placeholder*="Search products"]');
+            if (!searchInput) searchInput = document.querySelector('input[placeholder*="Search"]');
+            if (!searchInput) searchInput = document.querySelector('[class*="product-search"] input');
+            if (!searchInput) searchInput = document.querySelector('input[type="text"][class*="search"]');
+
+            if (searchInput) {
+              searchInput.focus();
+              searchInput.click();
+              await sleep(300);
+
+              // ใช้ native input value setter (React/TUX ต้องทำแบบนี้)
+              const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+              nativeInputValueSetter.call(searchInput, name);
+              searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+              searchInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+              await sleep(500);
+
+              // กดปุ่ม search (แว่นขยาย)
+              const searchIcon = document.querySelector('[class*="product-search-icon"], [class*="search-icon"]');
+              if (searchIcon) {
+                searchIcon.click();
+              } else {
+                // Fallback: กด Enter
+                searchInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
+                searchInput.dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter', keyCode: 13, bubbles: true }));
+                searchInput.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', keyCode: 13, bubbles: true }));
+              }
+
+              await sleep(3000); // รอผลค้นหา
+            }
+
+            // กดเลือก radio ของสินค้าตัวแรก (TUXRadioStandalone-input)
+            let clicked = false;
+
+            // วิธี 1: หา TUXRadioStandalone-input (TikTok specific)
+            const tuxRadios = document.querySelectorAll('.TUXRadioStandalone-input, input[class*="TUXRadio"]');
+            for (const radio of tuxRadios) {
+              if (radio.offsetParent !== null || radio.closest('tr')) {
+                radio.click();
+                clicked = true;
+                break;
+              }
+            }
+
+            // วิธี 2: หา radio input ทั่วไป
+            if (!clicked) {
+              for (const radio of document.querySelectorAll('input[type="radio"]')) {
+                if (radio.getBoundingClientRect().width > 0) {
+                  radio.click();
+                  clicked = true;
+                  break;
+                }
+              }
+            }
+
+            // วิธี 3: กด td แรกของ row แรก
+            if (!clicked) {
+              const rows = document.querySelectorAll('table tbody tr');
+              if (rows.length > 0) {
+                const firstCell = rows[0].querySelector('td:first-child');
+                if (firstCell) { firstCell.click(); clicked = true; }
+              }
+            }
+
+            if (!clicked) return resolve({ success: false, error: 'เลือกสินค้าไม่สำเร็จ', step: 3 });
+
+            await sleep(2000);
+
+            // กด Next (ปุ่มสีชมพู)
+            const nextBtn2 = findButton(['Next', 'ถัดไป']);
+            if (!nextBtn2) return resolve({ success: false, error: 'ไม่พบปุ่ม Next (step 3)', step: 3 });
+            nextBtn2.click();
+            await sleep(3000);
+
+            // ===== Step 4: กด "Add" สุดท้าย (ปุ่มสีชมพู) =====
+            const addFinalBtn = findButton(['Add', 'เพิ่ม']);
+            if (!addFinalBtn) return resolve({ success: false, error: 'ไม่พบปุ่ม Add (step 4)', step: 4 });
+            addFinalBtn.click();
+            await sleep(1000);
+
+            resolve({ success: true, productName: name });
+
+          } catch (err) {
+            resolve({ success: false, error: err.message });
           }
-        }, 1000);
-
-        return { success: true, note: 'กดปุ่มเพิ่มสินค้าแล้ว รอเลือกสินค้า' };
+        });
       },
       args: [productName],
     });
   },
 
-  // ติ๊ก AI-generated content
+  // ติ๊ก AI-generated content (ต้องกด Show more ก่อน)
   async setAIGeneratedFlag(tabId, enabled) {
     return chrome.scripting.executeScript({
       target: { tabId },
       func: (shouldEnable) => {
-        // หา AI-generated checkbox/toggle
-        const labels = document.querySelectorAll('label, span, div');
-        for (const label of labels) {
-          const text = label.textContent;
-          if (text.includes('AI-generated') || text.includes('AI') && text.includes('content')) {
-            // หา toggle/checkbox ใกล้ๆ
-            const parent = label.closest('div[class]') || label.parentElement;
-            const toggle = parent?.querySelector('input[type="checkbox"], [role="switch"], button');
-            if (toggle) {
-              const isChecked = toggle.checked || toggle.getAttribute('aria-checked') === 'true';
-              if (shouldEnable && !isChecked) toggle.click();
-              if (!shouldEnable && isChecked) toggle.click();
-              return { success: true };
+        return new Promise(async (resolve) => {
+          const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+          // Step 1: กดปุ่ม "Show more" ก่อน
+          const allElements = document.querySelectorAll('button, div[role="button"], span');
+          for (const el of allElements) {
+            const txt = el.textContent.trim();
+            if ((txt.includes('Show more') || txt.includes('แสดงเพิ่มเติม')) && el.offsetParent !== null) {
+              el.scrollIntoView({ behavior: 'instant', block: 'center' });
+              el.click();
+              break;
             }
           }
-        }
-        return { success: false, error: 'ไม่พบ AI-generated toggle' };
+
+          await sleep(1500);
+
+          // Step 2: หาข้อความ "AI-generated content" แล้วหา Switch ที่อยู่ใกล้
+          let found = false;
+
+          // หา element ที่มีข้อความ AI-generated
+          const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+          let textNode;
+          while (textNode = walker.nextNode()) {
+            if (textNode.textContent.includes('AI-generated content')) {
+              // เจอข้อความ → หา Switch__root ที่อยู่ใกล้ๆ (ใน parent chain)
+              let parent = textNode.parentElement;
+              for (let i = 0; i < 8; i++) {
+                if (!parent) break;
+                // หา input[role="switch"] ก่อน ถ้าไม่เจอค่อยหา Switch__root
+                const switchInput = parent.querySelector('input[role="switch"]');
+                if (switchInput) {
+                  switchInput.click();
+                  found = true;
+                  break;
+                }
+                const switchRoot = parent.querySelector('[class*="Switch__root"]');
+                if (switchRoot) {
+                  switchRoot.querySelector('input[role="switch"]')?.click() || switchRoot.click();
+                  found = true;
+                  break;
+                }
+                parent = parent.parentElement;
+              }
+              if (found) break;
+            }
+          }
+
+          if (found) return resolve({ success: true });
+
+          // Fallback: หา unchecked switch input ตัวสุดท้าย
+          const uncheckedInputs = document.querySelectorAll('input[role="switch"][class*="checked-false"], input[role="switch"]:not(:checked)');
+          if (uncheckedInputs.length > 0) {
+            const lastInput = uncheckedInputs[uncheckedInputs.length - 1];
+            lastInput.click();
+            return resolve({ success: true, method: 'lastUncheckedInput' });
+          }
+
+          resolve({ success: false, error: 'ไม่พบ AI-generated Switch' });
+        });
       },
       args: [enabled],
     });
@@ -263,27 +432,39 @@ const TikTokPoster = {
     });
   },
 
-  // กดปุ่ม Post
+  // กดปุ่ม Post (เลื่อนลงล่างสุดก่อน)
   async clickPost(tabId) {
     return chrome.scripting.executeScript({
       target: { tabId },
       func: () => {
-        const buttons = document.querySelectorAll('button');
-        const keywords = ['โพสต์', 'Post', 'Publish'];
+        return new Promise(async (resolve) => {
+          const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-        for (const btn of buttons) {
-          const text = btn.textContent.trim();
-          if (keywords.some(k => text === k || text.includes(k))) {
-            const rect = btn.getBoundingClientRect();
-            if (rect.width > 50 && rect.height > 20) {
-              btn.scrollIntoView({ behavior: 'instant', block: 'center' });
-              btn.click();
-              return { success: true };
-            }
+          // เลื่อนลงล่างสุด
+          window.scrollTo(0, document.body.scrollHeight);
+          await sleep(1000);
+
+          // หาปุ่ม Post (TikTok ใช้ class post_video_button)
+          let postBtn = document.querySelector('[class*="post_video_button"] button');
+          if (!postBtn) postBtn = document.querySelector('.post_video_button');
+
+          // Fallback: หาจากข้อความ
+          if (!postBtn) {
+            const buttons = Array.from(document.querySelectorAll('button'));
+            postBtn = buttons.find(btn => {
+              const text = btn.textContent.trim();
+              return text === 'Post' && btn.offsetParent !== null && !btn.disabled;
+            });
           }
-        }
 
-        return { success: false, error: 'ไม่พบปุ่ม Post' };
+          if (!postBtn) return resolve({ success: false, error: 'ไม่พบปุ่ม Post' });
+
+          postBtn.scrollIntoView({ behavior: 'instant', block: 'center' });
+          await sleep(500);
+          postBtn.click();
+
+          resolve({ success: true });
+        });
       },
     });
   },
