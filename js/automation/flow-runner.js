@@ -299,6 +299,8 @@ const FlowRunner = {
   stop() {
     DOMHelpers.stop();
     this.isRunning = false;
+    // reset หลัง stop เพื่อไม่ให้ค้างรอบถัดไป
+    setTimeout(() => DOMHelpers.reset(), 1000);
   },
 
   pause() {

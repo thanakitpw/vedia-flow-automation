@@ -60,14 +60,14 @@ const DOMHelpers = {
   // Sleep ที่ cancel ได้ (เช็ค shouldStop ทุก 100ms)
   sleep(ms) {
     return new Promise((resolve, reject) => {
-      if (this.shouldStop) return reject(new Error('STOPPED'));
+      if (this.shouldStop) return resolve('STOPPED');
 
       let elapsed = 0;
       const checkInterval = 100;
       const intervalId = setInterval(() => {
         if (this.shouldStop) {
           clearInterval(intervalId);
-          reject(new Error('STOPPED'));
+          resolve('STOPPED');
           return;
         }
         if (this.isPaused) return; // รอจนกว่าจะ unpause
