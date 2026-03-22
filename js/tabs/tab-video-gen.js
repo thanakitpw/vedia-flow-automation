@@ -536,36 +536,18 @@ const TabVideoGen = {
   },
 
   // 7. Paste reference (ภาพที่เจน + สินค้า + ตัวละคร)
+  // 7. หารูปที่เจนไว้ใน Feed → hover → ⋮ → "เพิ่มไปยังพรอมต์"
+  // ไม่ paste รูปใหม่ แต่ใช้รูปที่เจนไว้แล้วบน Google Flow
   async _t7_pasteReference(row) {
-    Logger.addLog('🧪 [7] Paste reference images...', 'info');
+    Logger.addLog('🧪 [7] หารูปที่เจนไว้ → ⋮ → เพิ่มไปยังพรอมต์...', 'info');
     const tabId = await this._getFlowTab();
-    const images = [];
 
-    // ดึงภาพที่เจนจาก Feed
-    const genImgs = await FlowAutomation.getGeneratedImages(tabId);
-    const genSrcs = genImgs?.[0]?.result || [];
-    if (genSrcs.length > 0) {
-      const dataUrl = await ImageUtils.urlToDataUrl(tabId, genSrcs[genSrcs.length - 1]);
-      if (dataUrl) {
-        images.push({ dataUrl, name: 'generated.jpg' });
-        Logger.addLog('🧪 ได้ภาพที่เจนจาก Feed', 'info');
-      }
-    }
-
-    // สินค้า + ตัวละคร
-    if (row.productImage?.startsWith('data:')) images.push({ dataUrl: row.productImage, name: 'product.jpg' });
-    if (row.characterImage?.startsWith('data:')) images.push({ dataUrl: row.characterImage, name: 'character.jpg' });
-
-    if (images.length === 0) {
-      showToast('ไม่มีรูป reference - เจนภาพก่อน (ปุ่ม 1-5)', 'warning');
-      return;
-    }
-
-    Logger.addLog(`🧪 paste ${images.length} รูป reference...`, 'info');
-    const r = await FlowAutomation.uploadImages(tabId, images);
+    // ไม่ paste รูปใหม่ แต่ใช้รูปที่มีอยู่แล้วใน Feed (null = ไม่ paste)
+    Logger.addLog('🧪 กำลังหารูปที่เจนไว้ใน Feed แล้วเพิ่มไปยังพรอมต์...', 'info');
+    const r = await FlowAutomation.addImageToPromptFromFeed(tabId, null);
     const d = r?.[0]?.result;
-    Logger.addLog(`🧪 ${d?.success ? '✅' : '❌'} ${d?.success ? `Paste ${d.uploaded} รูป` : d?.error}`, d?.success ? 'success' : 'error');
-    showToast(d?.success ? `Paste ${d.uploaded} reference สำเร็จ!` : (d?.error || 'ไม่สำเร็จ'), d?.success ? 'success' : 'error');
+    Logger.addLog(`🧪 ${d?.success ? '✅' : '❌'} ${d?.msg || ''}`, d?.success ? 'success' : 'error');
+    showToast(d?.msg || '', d?.success ? 'success' : 'error');
   },
 
   // 8. วาง Video Prompt (template + style)

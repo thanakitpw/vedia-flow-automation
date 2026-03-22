@@ -135,30 +135,31 @@ const FlowAutomation = {
             heavyClick(modeTab);
             await sleep(1000);
 
-            // ถ้าเป็น Video mode → กดเลือก "เฟรม" (Frames) sub-tab
+            // ถ้าเป็น Video mode → กดเลือก "ส่วนผสม" (Ingredients) sub-tab
             if (mode === 'video') {
-              let framesTab = null;
-              for (let i = 0; i < 10; i++) {
-                await sleep(300);
-                // หาจาก icon 'crop_free' (เฟรม)
-                framesTab = findTabByIcon('crop_free');
-                if (framesTab) break;
-              }
+              let ingredientsTab = null;
 
-              // Fallback: หาจากข้อความ "เฟรม" / "Frames"
-              if (!framesTab) {
-                const allTabs = document.querySelectorAll('button[role="tab"]');
-                for (const tab of allTabs) {
-                  const txt = tab.textContent.trim();
-                  if (txt.includes('เฟรม') || txt.includes('Frames') || txt.includes('Frame')) {
-                    framesTab = tab;
-                    break;
-                  }
+              // หาจากข้อความ "ส่วนผสม" / "Ingredients"
+              const allSubTabs = document.querySelectorAll('button[role="tab"]');
+              for (const tab of allSubTabs) {
+                const txt = tab.textContent.trim();
+                if (txt.includes('ส่วนผสม') || txt.includes('Ingredients') || txt.includes('Ingredient')) {
+                  ingredientsTab = tab;
+                  break;
                 }
               }
 
-              if (framesTab) {
-                heavyClick(framesTab);
+              // Fallback: หาจาก icon
+              if (!ingredientsTab) {
+                for (let i = 0; i < 10; i++) {
+                  await sleep(300);
+                  ingredientsTab = findTabByIcon('blender') || findTabByIcon('science') || findTabByIcon('mixture');
+                  if (ingredientsTab) break;
+                }
+              }
+
+              if (ingredientsTab) {
+                heavyClick(ingredientsTab);
                 await sleep(1000);
               }
             }
@@ -278,6 +279,194 @@ const FlowAutomation = {
 
   async uploadImage(tabId, imageDataUrl, fileName = 'image.jpg') {
     return this.uploadImages(tabId, [{ dataUrl: imageDataUrl, name: fileName }]);
+  },
+
+  // ===== เพิ่มรูปจาก Feed เข้า Prompt ผ่านเมนู "เพิ่มไปยังพรอมต์" (จาก PROMPT&PLAY) =====
+  // วิธี: paste รูป → รอขึ้น Feed → hover → กด ⋮ → กด "เพิ่มไปยังพรอมต์"
+  async addImageToPromptFromFeed(tabId, imageDataUrl) {
+    return chrome.scripting.executeScript({
+      target: { tabId },
+      func: (dataUrl) => {
+        return new Promise(async (resolve) => {
+          try {
+            const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+            async function triggerClick(el) {
+              if (!el) return;
+              el.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+              el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+              el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+              el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+              await sleep(100);
+              el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+              el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+            }
+
+            async function actionClick(el) {
+              if (!el) return;
+              el.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+              el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+              el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+              await sleep(100);
+              el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+              el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+              el.click();
+            }
+
+            // หารูปใน Feed
+            const getFeedImgs = () => Array.from(document.querySelectorAll('img')).filter(img => {
+              const rect = img.getBoundingClientRect();
+              const isInPrompt = img.closest('[role="textbox"], [data-slate-editor="true"], header, nav, [role="banner"]');
+              // ข้ามรูปที่อัพโหลด (รูปต้นฉบับ)
+              let isUploaded = false;
+              let card = img;
+              for (let i = 0; i < 8; i++) {
+                if (!card || card === document.body) break;
+                const text = (card.innerText || '').toLowerCase();
+                if (text.includes('อัปโหลด') || text.includes('uploaded') || text.includes('original')) {
+                  isUploaded = true;
+                  break;
+                }
+                card = card.parentElement;
+              }
+              return rect.width > 150 && !isInPrompt && !isUploaded;
+            });
+
+            let newImg = null;
+
+            if (dataUrl) {
+              // ถ้ามี dataUrl → paste รูปใหม่เข้า Feed
+              const initialSrcs = getFeedImgs().map(img => img.src);
+
+              const editor = document.querySelector('[data-slate-editor="true"]') || document.querySelector('[role="textbox"]');
+              if (!editor) return resolve({ success: false, msg: 'ไม่พบช่อง editor' });
+
+              editor.focus();
+              editor.click();
+              await sleep(500);
+
+              const byteString = atob(dataUrl.split(',')[1]);
+              const mimeType = dataUrl.match(/^data:(.*?);/)?.[1] || 'image/jpeg';
+              const ab = new ArrayBuffer(byteString.length);
+              const ia = new Uint8Array(ab);
+              for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+              const file = new File([new Blob([ab], { type: mimeType })], 'reference.jpg', { type: mimeType });
+
+              const dt = new DataTransfer();
+              dt.items.add(file);
+              editor.dispatchEvent(new ClipboardEvent('paste', {
+                clipboardData: dt, bubbles: true, cancelable: true,
+              }));
+              await sleep(4000);
+
+              // ถ้ามี dialog Crop → กด Save
+              const confirmTexts = ['Save', 'Confirm', 'Crop and Save', 'บันทึก', 'ยืนยัน', 'เสร็จสิ้น', 'ต่อไป'];
+              for (let check = 0; check < 10; check++) {
+                const btns = document.querySelectorAll('button');
+                const confirmBtn = Array.from(btns).find(btn =>
+                  confirmTexts.some(t => (btn.textContent || '').includes(t)) && btn.offsetParent !== null
+                );
+                if (confirmBtn) { confirmBtn.click(); await sleep(4000); break; }
+                await sleep(500);
+              }
+
+              // รอรูปใหม่ขึ้น Feed
+              for (let w = 0; w < 40; w++) {
+                await sleep(2000);
+                newImg = getFeedImgs().find(img => !initialSrcs.includes(img.src));
+                if (newImg) break;
+              }
+            } else {
+              // ถ้าไม่มี dataUrl → หารูปที่เจนไว้แล้วใน Feed (ไม่ paste ใหม่)
+              const feedImgs = getFeedImgs();
+              if (feedImgs.length > 0) {
+                // เอารูปตัวแรก (ซ้ายสุด = เจนล่าสุด ใน Google Flow)
+                newImg = feedImgs[0];
+              }
+            }
+
+            if (!newImg) return resolve({ success: false, msg: 'ไม่พบรูปที่เจนไว้ใน Feed' });
+
+            // Hover ที่รูปใหม่
+            newImg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            await sleep(1500);
+
+            let card = newImg;
+            for (let i = 0; i < 4; i++) {
+              if (card) {
+                card.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+                card.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+                card = card.parentElement;
+              }
+            }
+            await sleep(1000);
+
+            // หาปุ่ม ⋮ (more_vert)
+            let dotBtn = null;
+            let container = newImg.parentElement;
+            for (let i = 0; i < 6; i++) {
+              if (!container) break;
+              const btns = Array.from(container.querySelectorAll('button'));
+              dotBtn = btns.find(b => {
+                const icon = b.querySelector('i');
+                return icon && (icon.textContent.includes('more_vert') || icon.textContent.includes('more_horiz'));
+              });
+              if (dotBtn) break;
+              container = container.parentElement;
+            }
+
+            // Fallback: หา ⋮ ที่ใกล้รูปมากที่สุด
+            if (!dotBtn) {
+              const allBtns = Array.from(document.querySelectorAll('button'));
+              const validDotBtns = allBtns.filter(b => {
+                const icon = b.querySelector('i');
+                const rect = b.getBoundingClientRect();
+                return icon && (icon.textContent.includes('more_vert') || icon.textContent.includes('more_horiz')) && rect.top > 80;
+              });
+              if (validDotBtns.length > 0) {
+                const imgRect = newImg.getBoundingClientRect();
+                validDotBtns.sort((a, b) =>
+                  Math.abs(a.getBoundingClientRect().top - imgRect.top) - Math.abs(b.getBoundingClientRect().top - imgRect.top)
+                );
+                dotBtn = validDotBtns[0];
+              }
+            }
+
+            if (!dotBtn) return resolve({ success: false, msg: 'ไม่พบปุ่ม ⋮' });
+
+            // กด ⋮
+            await triggerClick(dotBtn);
+            await sleep(1500);
+
+            // หาเมนู "เพิ่มไปยังพรอมต์" / "Add to prompt"
+            const menuItems = Array.from(document.querySelectorAll('[role="menuitem"], button')).reverse();
+            const addPromptBtn = menuItems.find(m => {
+              const icon = m.querySelector('i.google-symbols, i');
+              const iconText = icon ? icon.textContent.trim().toLowerCase() : '';
+              const txt = (m.textContent || '').replace(/\s+/g, '').toLowerCase();
+              const isTarget = iconText === 'add' || iconText === 'input' || iconText === 'add_photo_alternate'
+                || txt.includes('เพิ่มไปยังพรอมต์') || txt.includes('addtoprompt');
+              const isNotUpload = !txt.includes('upload') && !txt.includes('อัปโหลด');
+              return isTarget && isNotUpload && m.offsetParent !== null;
+            });
+
+            if (addPromptBtn) {
+              await actionClick(addPromptBtn);
+              await sleep(800);
+              document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true }));
+              return resolve({ success: true, msg: '✅ กด "เพิ่มไปยังพรอมต์" สำเร็จ!' });
+            } else {
+              document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true }));
+              return resolve({ success: false, msg: 'ไม่พบเมนู "เพิ่มไปยังพรอมต์"' });
+            }
+
+          } catch (err) {
+            resolve({ success: false, msg: 'Error: ' + err.message });
+          }
+        });
+      },
+      args: [imageDataUrl],
+    });
   },
 
   // ===== Step 3: วาง Prompt (จาก PROMPT&PLAY) =====
