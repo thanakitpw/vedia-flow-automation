@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <title>Vedia Flow Automation</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+
+  <!-- Auth Overlay -->
+  <div id="auth-overlay" class="auth-overlay">
+    <div class="auth-logo">V</div>
+    <div class="auth-title">Vedia Flow</div>
+    <div class="auth-version">Automation v1.0.0</div>
+    <div class="auth-subtitle">กรุณากรอก License Key เพื่อเข้าใช้งาน</div>
+
+    <input type="text" id="license-key-input" class="input auth-input"
+           placeholder="VEDIA-XXXX-XXXX-XXXX">
+
+    <button id="btn-login" class="btn btn-primary auth-btn">เข้าสู่ระบบ</button>
+
+    <div id="login-msg" class="auth-msg"></div>
+
+    <div class="auth-device">
+      Device ID: <span id="display-device-id">...</span>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="brand-box">
+      <div class="brand-logo">V</div>
+      <div class="brand-info">
+        <h1>Vedia Flow</h1>
+        <div class="brand-meta">
+          <span class="brand-version">v1.0.0</span>
+          <div id="expire-badge" class="expire-badge safe" style="display:none;">
+            <span id="expire-text">กำลังตรวจสอบ...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button id="btn-theme" class="btn-icon" title="สลับ Theme">🌙</button>
+      <button id="btn-settings-header" class="btn-icon" title="ตั้งค่า">⚙️</button>
+    </div>
+  </header>
+
+  <!-- Tab Navigation -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-tab="settings">⚙️ ตั้งค่า</button>
+    <button class="tab-btn" data-tab="tiktok-products">🛒 สินค้า</button>
+    <button class="tab-btn" data-tab="warehouse">🏪 คลัง</button>
+    <button class="tab-btn" data-tab="video-gen">🎬 สร้างคลิป</button>
+    <button class="tab-btn" data-tab="advanced-video">🎥 คลิปยาว</button>
+    <button class="tab-btn" data-tab="channel-builder">📺 ปั้นช่อง</button>
+  </nav>
+
+  <!-- Tab Content Container -->
+  <div id="tab-content" class="tab-content">
+    <div class="loading">
+      <div class="spinner"></div>
+      กำลังโหลด...
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- JS Files (ลำดับสำคัญ) -->
+  <script src="js/config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/toast.js"></script>
+  <script src="js/logger.js"></script>
+  <script src="js/auth.js"></script>
+
+  <!-- AI Providers -->
+  <script src="js/ai/ai-provider.js"></script>
+  <script src="js/ai/gemini-provider.js"></script>
+  <script src="js/ai/claude-provider.js"></script>
+  <script src="js/ai/openai-provider.js"></script>
+  <script src="js/ai/openrouter-provider.js"></script>
+
+  <!-- Utils -->
+  <script src="js/utils/image-utils.js"></script>
+  <script src="js/utils/prompt-builder.js"></script>
+
+  <!-- Automation Modules -->
+  <script src="js/automation/dom-helpers.js"></script>
+  <script src="js/automation/flow-automation.js"></script>
+  <script src="js/automation/tiktok-scraper.js"></script>
+  <script src="js/automation/tiktok-poster.js"></script>
+  <script src="js/automation/overlay.js"></script>
+  <script src="js/automation/flow-runner.js"></script>
+  <script src="js/automation/scheduler.js"></script>
+
+  <!-- Tab Modules -->
+  <script src="js/tabs/tab-settings.js"></script>
+  <script src="js/tabs/tab-warehouse.js"></script>
+  <script src="js/tabs/tab-tiktok-products.js"></script>
+  <script src="js/tabs/tab-video-gen.js"></script>
+  <script src="js/tabs/tab-advanced-video.js"></script>
+  <script src="js/tabs/tab-channel-builder.js"></script>
+
+  <!-- App Bootstrap (ต้องโหลดสุดท้าย) -->
+  <script src="js/app.js"></script>
+
+</body>
+</html>

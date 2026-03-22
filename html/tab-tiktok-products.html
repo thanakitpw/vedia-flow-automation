@@ -1,0 +1,66 @@
+<div class="card">
+  <div class="card-title">🛒 TikTok Products</div>
+  <div class="card-description">จัดการสินค้า, อัพโหลดรูปตัวละคร/สินค้า, และวิเคราะห์ด้วย AI</div>
+</div>
+
+<!-- Action Buttons -->
+<div class="btn-group">
+  <button id="btn-import-tiktok" class="btn btn-primary btn-sm">📥 ดึงจาก TikTok</button>
+  <button id="btn-delete-selected" class="btn btn-ghost btn-sm" style="color:var(--error);">🗑️ Delete (<span id="selected-count">0</span>)</button>
+  <button id="btn-same-character" class="btn btn-ghost btn-sm">👤 Same Character</button>
+</div>
+<div class="btn-group" style="margin-top:4px;">
+  <button id="btn-tp-export" class="btn btn-ghost btn-sm">📤 Export</button>
+  <button id="btn-tp-import" class="btn btn-ghost btn-sm">📥 Import</button>
+  <button id="btn-tp-download-json" class="btn btn-ghost btn-sm">💾 Download JSON</button>
+  <button id="btn-tp-add-to-warehouse" class="btn btn-ghost btn-sm">🏪 Add to Warehouse</button>
+</div>
+<input type="file" id="tp-import-file" accept=".json" class="hidden">
+
+<!-- Products Table -->
+<div class="table-container" style="margin-top:12px;">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:30px;"><input type="checkbox" id="select-all-products"></th>
+        <th style="width:60px;"># / สถานะ</th>
+        <th style="width:60px;">ตัวละคร</th>
+        <th style="width:60px;">รูปสินค้า</th>
+        <th>รายละเอียด</th>
+        <th style="width:100px;">ชื่อสินค้า</th>
+      </tr>
+    </thead>
+    <tbody id="tiktok-products-tbody">
+      <tr>
+        <td colspan="6" class="empty-state">ยังไม่มีสินค้า - กดปุ่ม "ดึงจาก TikTok" หรือ "Import"</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Activity Log -->
+<div id="tp-activity-log" class="activity-log" style="margin-top:16px;">
+  <div class="activity-log-header">
+    <span class="activity-log-title">Activity Log</span>
+    <span class="activity-log-count">0 entries</span>
+  </div>
+  <div class="activity-log-list">
+    <div class="empty-state">ยังไม่มี activity</div>
+  </div>
+</div>
+
+<!-- Modal: เลือก Character -->
+<div id="modal-select-character" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title">เลือกตัวละคร</div>
+    <div class="modal-desc">เลือกตัวละครจาก Warehouse หรืออัพโหลดใหม่</div>
+    <div id="character-picker-list"></div>
+    <div class="input-group" style="margin-top:12px;">
+      <label>หรืออัพโหลดรูปใหม่</label>
+      <input type="file" id="input-new-character-image" accept="image/*">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-modal-cancel">ยกเลิก</button>
+    </div>
+  </div>
+</div>

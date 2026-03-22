@@ -1,0 +1,91 @@
+<div class="card">
+  <div class="card-title">🎥 Advanced Video Generation (16 วินาที)</div>
+  <div class="card-description">สร้างวิดีโอ 16 วินาที (2 scenes ต่อเนื่อง) พร้อมโพสต์ TikTok</div>
+
+  <div class="btn-group" style="margin-top:8px;">
+    <button id="btn-adv-run" class="btn btn-primary">▶ Run Full Flow (16 วิ)</button>
+    <button id="btn-adv-pause" class="btn btn-ghost hidden">⏸ Pause</button>
+    <button id="btn-adv-stop" class="btn btn-danger btn-sm hidden">⏹ Stop</button>
+  </div>
+</div>
+
+<!-- ตั้งค่า -->
+<div class="section-title">ตั้งค่า Scene Continuation</div>
+<div class="card">
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+    <div class="input-group">
+      <label>สัดส่วน</label>
+      <select id="adv-aspect-ratio">
+        <option value="9:16">แนวตั้ง 9:16</option>
+        <option value="16:9">แนวนอน 16:9</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label>มุมกล้อง</label>
+      <select id="adv-camera-angle">
+        <option value="auto">สุ่มอัตโนมัติ</option>
+        <option value="close-up face level">ระยะใกล้ (Close-up)</option>
+        <option value="medium shot waist-up">ระยะกลาง (Medium)</option>
+        <option value="wide establishing shot">ระยะไกล (Wide)</option>
+      </select>
+    </div>
+  </div>
+  <div class="card" style="background:var(--bg-tertiary); padding:10px; font-size:12px; margin-top:8px;">
+    <strong>📋 วิธีทำงาน:</strong>
+    <ol style="margin:4px 0 0 16px; color:var(--text-secondary);">
+      <li>สร้าง Scene 1 (8 วินาที) บน Google Flow</li>
+      <li>สร้าง Scene 2 (8 วินาที) ต่อเนื่องจาก Scene 1</li>
+      <li>รวม 2 scenes = 16 วินาที</li>
+      <li>โพสต์ TikTok พร้อมปักตะกร้า</li>
+    </ol>
+  </div>
+</div>
+
+<!-- Toggles -->
+<div class="toggle-row">
+  <div class="toggle-info">
+    <span class="toggle-label">🚫 No Text Mode</span>
+    <span class="toggle-desc">ไม่มีตัวหนังสือในภาพและวิดีโอ</span>
+  </div>
+  <label class="switch">
+    <input type="checkbox" id="adv-no-text">
+    <span class="slider"></span>
+  </label>
+</div>
+
+<!-- Product Table -->
+<div class="section-title">
+  Product Table (<span id="adv-table-count">0</span>/500)
+</div>
+<div class="btn-group">
+  <button id="btn-adv-add-row" class="btn btn-primary btn-sm">+ Add Row</button>
+  <button id="btn-adv-from-warehouse" class="btn btn-ghost btn-sm">🏪 Select from Warehouse</button>
+  <button id="btn-adv-clear" class="btn btn-ghost btn-sm" style="color:var(--error);">🗑️ ล้าง</button>
+</div>
+
+<div class="table-container" style="margin-top:8px;">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Product</th>
+        <th>Highlights</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="adv-table-body">
+      <tr><td colspan="4" class="empty-state">ยังไม่มีสินค้า</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Activity Log -->
+<div id="adv-activity-log" class="activity-log" style="margin-top:16px;">
+  <div class="activity-log-header">
+    <span class="activity-log-title">Activity Log</span>
+    <span class="activity-log-count">0 entries</span>
+  </div>
+  <div class="activity-log-list">
+    <div class="empty-state">ยังไม่มี activity</div>
+  </div>
+</div>

@@ -1,0 +1,125 @@
+<div class="card">
+  <div class="card-title">🏪 Warehouse</div>
+  <div class="card-description">คลังข้อมูลกลางสำหรับสินค้า, ตัวละคร, และฉากหลัง</div>
+</div>
+
+<!-- Sub-tabs -->
+<div class="sub-tabs">
+  <button class="sub-tab-btn active" data-subtab="products">สินค้า</button>
+  <button class="sub-tab-btn" data-subtab="characters">ตัวละคร</button>
+  <button class="sub-tab-btn" data-subtab="backgrounds">ฉากหลัง</button>
+</div>
+
+<!-- Products Sub-tab -->
+<div id="subtab-products" class="subtab-content">
+  <div class="flex justify-between items-center mb-8">
+    <span class="section-title" style="margin:0;">สินค้า (<span id="products-count">0</span>)</span>
+    <div class="btn-group">
+      <button id="btn-add-product" class="btn btn-primary btn-sm">+ เพิ่มสินค้า</button>
+      <button id="btn-export-warehouse" class="btn btn-ghost btn-sm">📤 Export</button>
+      <button id="btn-import-warehouse" class="btn btn-ghost btn-sm">📥 Import</button>
+    </div>
+  </div>
+  <input type="file" id="import-warehouse-file" accept=".json" class="hidden">
+  <div id="products-list"></div>
+</div>
+
+<!-- Characters Sub-tab -->
+<div id="subtab-characters" class="subtab-content hidden">
+  <div class="flex justify-between items-center mb-8">
+    <span class="section-title" style="margin:0;">ตัวละคร (<span id="characters-count">0</span>)</span>
+    <button id="btn-add-character" class="btn btn-primary btn-sm">+ เพิ่มตัวละคร</button>
+  </div>
+  <div id="characters-list"></div>
+</div>
+
+<!-- Backgrounds Sub-tab -->
+<div id="subtab-backgrounds" class="subtab-content hidden">
+  <div class="flex justify-between items-center mb-8">
+    <span class="section-title" style="margin:0;">ฉากหลัง (<span id="backgrounds-count">0</span>)</span>
+    <button id="btn-add-background" class="btn btn-primary btn-sm">+ เพิ่มฉากหลัง</button>
+  </div>
+  <div id="backgrounds-list"></div>
+</div>
+
+<!-- Activity Log -->
+<div id="warehouse-log" class="activity-log" style="margin-top:16px;">
+  <div class="activity-log-header">
+    <span class="activity-log-title">Activity Log</span>
+    <span class="activity-log-count">0 entries</span>
+  </div>
+  <div class="activity-log-list">
+    <div class="empty-state">ยังไม่มี activity</div>
+  </div>
+</div>
+
+<!-- Modal: เพิ่มสินค้า -->
+<div id="modal-add-product" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title">เพิ่มสินค้า</div>
+    <div class="modal-desc">กรอกข้อมูลสินค้าสำหรับ Warehouse</div>
+    <div class="input-group">
+      <label>ชื่อสินค้า</label>
+      <input type="text" id="input-product-name" placeholder="เช่น เซรั่มหน้าใส">
+    </div>
+    <div class="input-group">
+      <label>จุดเด่น / Highlights</label>
+      <textarea id="input-product-highlights" placeholder="เช่น ช่วยลดรอยสิว ผิวกระจ่างใส" rows="2"></textarea>
+    </div>
+    <div class="input-group">
+      <label>รหัสสินค้า (Product ID)</label>
+      <input type="text" id="input-product-code" placeholder="เช่น 17301023...">
+    </div>
+    <div class="input-group">
+      <label>รูปสินค้า</label>
+      <input type="file" id="input-product-image" accept="image/*">
+      <div id="preview-product-image" class="image-preview"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-modal-cancel">ยกเลิก</button>
+      <button id="btn-save-product" class="btn btn-primary">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: เพิ่มตัวละคร -->
+<div id="modal-add-character" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title">เพิ่มตัวละคร</div>
+    <div class="modal-desc">อัพโหลดรูปตัวละครสำหรับใช้ในวิดีโอ</div>
+    <div class="input-group">
+      <label>ชื่อตัวละคร</label>
+      <input type="text" id="input-character-name" placeholder="เช่น สาวผมยาว">
+    </div>
+    <div class="input-group">
+      <label>รูปตัวละคร</label>
+      <input type="file" id="input-character-image" accept="image/*">
+      <div id="preview-character-image" class="image-preview"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-modal-cancel">ยกเลิก</button>
+      <button id="btn-save-character" class="btn btn-primary">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: เพิ่มฉากหลัง -->
+<div id="modal-add-background" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title">เพิ่มฉากหลัง</div>
+    <div class="modal-desc">อัพโหลดรูปฉากหลังสำหรับใช้ในวิดีโอ</div>
+    <div class="input-group">
+      <label>ชื่อฉากหลัง</label>
+      <input type="text" id="input-background-name" placeholder="เช่น ห้องนั่งเล่น">
+    </div>
+    <div class="input-group">
+      <label>รูปฉากหลัง</label>
+      <input type="file" id="input-background-image" accept="image/*">
+      <div id="preview-background-image" class="image-preview"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-modal-cancel">ยกเลิก</button>
+      <button id="btn-save-background" class="btn btn-primary">บันทึก</button>
+    </div>
+  </div>
+</div>

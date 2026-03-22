@@ -1,0 +1,81 @@
+<div class="card">
+  <div class="card-title">⚙️ ตั้งค่า API</div>
+  <div class="card-description">เลือก AI Provider และกรอก API Key สำหรับสร้าง Prompt และ Caption</div>
+</div>
+
+<!-- เลือก AI Provider -->
+<div class="section-title">AI Provider</div>
+<div class="card">
+  <div class="input-group">
+    <label>เลือก Provider</label>
+    <div id="provider-buttons" class="btn-group">
+      <button class="btn btn-ghost btn-sm provider-btn" data-provider="openrouter">OpenRouter</button>
+      <button class="btn btn-ghost btn-sm provider-btn" data-provider="gemini">Gemini</button>
+      <button class="btn btn-ghost btn-sm provider-btn" data-provider="claude">Claude</button>
+      <button class="btn btn-ghost btn-sm provider-btn" data-provider="openai">OpenAI</button>
+    </div>
+  </div>
+</div>
+
+<!-- API Key Inputs -->
+<div class="section-title">API Key</div>
+<div class="card">
+  <!-- OpenRouter -->
+  <div id="section-openrouter" class="provider-section">
+    <div class="input-group">
+      <label>OpenRouter API Key</label>
+      <input type="password" id="api-key-openrouter" placeholder="sk-or-v1-...">
+    </div>
+    <div class="input-group">
+      <label>Model</label>
+      <select id="openrouter-model">
+        <!-- จะ populate ด้วย JS -->
+      </select>
+    </div>
+    <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+      💡 Models ที่มี <span class="badge badge-success">Free</span> ใช้ได้ฟรีไม่มีค่าใช้จ่าย
+    </div>
+  </div>
+
+  <!-- Gemini -->
+  <div id="section-gemini" class="provider-section hidden">
+    <div class="input-group">
+      <label>Gemini API Key</label>
+      <input type="password" id="api-key-gemini" placeholder="AIza...">
+    </div>
+    <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+      📌 รับ key ที่ <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent);">Google AI Studio</a>
+    </div>
+  </div>
+
+  <!-- Claude -->
+  <div id="section-claude" class="provider-section hidden">
+    <div class="input-group">
+      <label>Claude API Key</label>
+      <input type="password" id="api-key-claude" placeholder="sk-ant-...">
+    </div>
+    <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+      📌 รับ key ที่ <a href="https://console.anthropic.com/" target="_blank" style="color:var(--accent);">Anthropic Console</a>
+    </div>
+  </div>
+
+  <!-- OpenAI -->
+  <div id="section-openai" class="provider-section hidden">
+    <div class="input-group">
+      <label>OpenAI API Key</label>
+      <input type="password" id="api-key-openai" placeholder="sk-...">
+    </div>
+    <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+      📌 รับ key ที่ <a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--accent);">OpenAI Platform</a>
+    </div>
+  </div>
+</div>
+
+<!-- ปุ่ม Actions -->
+<div class="btn-group" style="margin-top:12px;">
+  <button id="btn-save-settings" class="btn btn-primary">💾 บันทึก API Keys</button>
+  <button id="btn-test-connection" class="btn btn-ghost">🔌 ทดสอบการเชื่อมต่อ</button>
+</div>
+
+<!-- ผลทดสอบ -->
+<div id="test-result" class="hidden" style="margin-top:8px; padding:10px; border-radius:8px; font-size:12px;"></div>

@@ -1,0 +1,151 @@
+<div class="card">
+  <div class="card-title">📺 Channel Builder</div>
+  <div class="card-description">สร้างคลิปปั้นช่อง TikTok - ไม่ขายของ เน้น views/followers</div>
+
+  <div class="btn-group" style="margin-top:8px;">
+    <button id="btn-ch-run" class="btn btn-primary">▶ สร้างคลิป</button>
+    <button id="btn-ch-stop" class="btn btn-danger btn-sm hidden">⏹ Stop</button>
+  </div>
+</div>
+
+<!-- เลือก/สร้าง Channel -->
+<div class="section-title">ช่อง</div>
+<div class="card">
+  <div style="display:grid; grid-template-columns:1fr auto; gap:8px; align-items:end;">
+    <div class="input-group" style="margin:0;">
+      <label>เลือกช่อง</label>
+      <select id="ch-select-channel">
+        <option value="">-- เลือกหรือสร้างใหม่ --</option>
+      </select>
+    </div>
+    <button id="btn-ch-new" class="btn btn-primary btn-sm" style="height:38px;">+ สร้างช่อง</button>
+  </div>
+  <div id="ch-channel-info" class="hidden" style="margin-top:8px; padding:8px; background:var(--bg-tertiary); border-radius:6px; font-size:12px;">
+    <strong id="ch-channel-name">-</strong>
+    <span class="badge badge-info" id="ch-channel-niche" style="margin-left:6px;">-</span>
+  </div>
+</div>
+
+<!-- เลือก Niche -->
+<div class="section-title">Niche Template</div>
+<div class="card">
+  <div class="input-group">
+    <label>หมวดหมู่คลิป</label>
+    <select id="ch-niche">
+      <option value="3d-satisfying">🎨 3D Satisfying (ผลไม้ 3D, ASMR)</option>
+      <option value="storytelling">📖 Storytelling (เล่าเรื่อง + text overlay)</option>
+      <option value="educational">📚 Educational (การเงิน, สุขภาพ)</option>
+      <option value="animation">🎬 Animation (การ์ตูน, สัตว์น่ารัก)</option>
+      <option value="custom">⚙️ Custom (กำหนดเอง)</option>
+    </select>
+  </div>
+  <div id="ch-custom-niche" class="input-group hidden">
+    <label>กำหนด Niche เอง</label>
+    <input type="text" id="ch-custom-niche-input" placeholder="เช่น อาหารสุขภาพ, แฟชั่น...">
+  </div>
+</div>
+
+<!-- ตั้งค่าวิดีโอ -->
+<div class="section-title">ตั้งค่าวิดีโอ</div>
+<div class="card">
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+    <div class="input-group">
+      <label>ความยาว</label>
+      <select id="ch-duration">
+        <option value="8">8 วินาที</option>
+        <option value="16">16 วินาที</option>
+        <option value="60" selected>60+ วินาที (แนะนำ)</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label>สัดส่วน</label>
+      <select id="ch-aspect">
+        <option value="9:16">แนวตั้ง 9:16</option>
+        <option value="16:9">แนวนอน 16:9</option>
+      </select>
+    </div>
+  </div>
+  <div style="font-size:11px; color:var(--success); margin-top:4px;">
+    💰 คลิป 60+ วินาที ได้เงินจาก Creator Rewards Program ($0.40-$1.00 ต่อ 1,000 views)
+  </div>
+</div>
+
+<!-- Scheduling -->
+<div class="section-title">ตั้งเวลาลง</div>
+<div class="card">
+  <div style="display:grid; grid-template-columns:1fr auto; gap:8px; align-items:end;">
+    <div class="input-group" style="margin:0;">
+      <label>ลงคลิปทุก</label>
+      <select id="ch-schedule-interval">
+        <option value="0">ไม่ตั้งเวลา</option>
+        <option value="60" selected>ทุก 1 ชั่วโมง</option>
+        <option value="120">ทุก 2 ชั่วโมง</option>
+        <option value="180">ทุก 3 ชั่วโมง</option>
+      </select>
+    </div>
+    <button id="btn-ch-schedule" class="btn btn-primary btn-sm" style="height:38px;">⏰ เริ่ม</button>
+  </div>
+  <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">
+    💡 แนะนำ 1-3 คลิป/วัน/ช่อง เพื่อไม่ให้ถูกแบน
+  </div>
+</div>
+
+<!-- Content Table -->
+<div class="section-title">รายการคลิป (<span id="ch-content-count">0</span>)</div>
+<div class="btn-group">
+  <button id="btn-ch-add-idea" class="btn btn-primary btn-sm">+ เพิ่มหัวข้อ</button>
+  <button id="btn-ch-ai-generate" class="btn btn-ghost btn-sm">🤖 AI สร้างหัวข้อ 10 รายการ</button>
+  <button id="btn-ch-clear" class="btn btn-ghost btn-sm" style="color:var(--error);">🗑️ ล้าง</button>
+</div>
+
+<div class="table-container" style="margin-top:8px;">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>หัวข้อ / Idea</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="ch-content-body">
+      <tr><td colspan="3" class="empty-state">ยังไม่มีหัวข้อ - กด AI สร้างหัวข้อ หรือเพิ่มเอง</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Activity Log -->
+<div id="ch-activity-log" class="activity-log" style="margin-top:16px;">
+  <div class="activity-log-header">
+    <span class="activity-log-title">Activity Log</span>
+    <span class="activity-log-count">0 entries</span>
+  </div>
+  <div class="activity-log-list">
+    <div class="empty-state">ยังไม่มี activity</div>
+  </div>
+</div>
+
+<!-- Modal: สร้างช่อง -->
+<div id="modal-new-channel" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title">สร้างช่องใหม่</div>
+    <div class="modal-desc">1 ช่อง = 1 หมวดหมู่ สร้างหลายช่องได้</div>
+    <div class="input-group">
+      <label>ชื่อช่อง</label>
+      <input type="text" id="ch-new-name" placeholder="เช่น Fruit 3D TH">
+    </div>
+    <div class="input-group">
+      <label>Niche</label>
+      <select id="ch-new-niche">
+        <option value="3d-satisfying">3D Satisfying</option>
+        <option value="storytelling">Storytelling</option>
+        <option value="educational">Educational</option>
+        <option value="animation">Animation</option>
+        <option value="custom">Custom</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-modal-cancel">ยกเลิก</button>
+      <button id="btn-ch-save-channel" class="btn btn-primary">สร้าง</button>
+    </div>
+  </div>
+</div>

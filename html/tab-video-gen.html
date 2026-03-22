@@ -1,0 +1,260 @@
+<div class="card">
+  <div class="card-title">🎬 Video Generation and Post</div>
+  <div class="card-description">สร้างวิดีโอ 8 วินาที, caption, และโพสต์ TikTok ในปุ่มเดียว</div>
+
+  <div class="btn-group" style="margin-top:8px;">
+    <button id="btn-run-full-flow" class="btn btn-primary">▶ Run Full Flow</button>
+    <button id="btn-pause-flow" class="btn btn-ghost hidden">⏸ Pause</button>
+    <button id="btn-stop-flow" class="btn btn-danger btn-sm hidden">⏹ Stop</button>
+  </div>
+
+  <!-- ปุ่มทดสอบ -->
+  <div class="section-title" style="margin-top:12px;">🧪 ทดสอบทีละ Step (รอ 2-3 วิ ระหว่างปุ่ม)</div>
+
+  <div class="card" style="padding:10px;">
+    <div style="font-size:11px; font-weight:600; color:var(--accent); margin-bottom:6px;">📸 สร้างภาพ</div>
+    <div class="btn-group" style="flex-wrap:wrap;">
+      <button id="btn-t1" class="btn btn-ghost btn-sm">1. เปิด Flow</button>
+      <button id="btn-t2" class="btn btn-ghost btn-sm">2. ตั้งค่า Image 9:16</button>
+      <button id="btn-t3" class="btn btn-ghost btn-sm">3. Paste รูป</button>
+      <button id="btn-t4" class="btn btn-ghost btn-sm">4. วาง Prompt</button>
+      <button id="btn-t5" class="btn btn-ghost btn-sm">5. กด Generate ⚡</button>
+    </div>
+  </div>
+
+  <div class="card" style="padding:10px; margin-top:6px;">
+    <div style="font-size:11px; font-weight:600; color:var(--warning); margin-bottom:6px;">🎬 สร้างวิดีโอ (หลังได้ภาพ)</div>
+    <div class="btn-group" style="flex-wrap:wrap;">
+      <button id="btn-t6" class="btn btn-ghost btn-sm">6. สลับ Video mode</button>
+      <button id="btn-t7" class="btn btn-ghost btn-sm">7. Paste reference</button>
+      <button id="btn-t8" class="btn btn-ghost btn-sm">8. วาง Video Prompt</button>
+      <button id="btn-t9" class="btn btn-ghost btn-sm">9. กด Generate ⚡</button>
+    </div>
+  </div>
+
+  <div class="card" style="padding:10px; margin-top:6px;">
+    <div style="font-size:11px; font-weight:600; color:var(--success); margin-bottom:6px;">📤 โพสต์ TikTok</div>
+    <div class="btn-group" style="flex-wrap:wrap;">
+      <button id="btn-t10" class="btn btn-ghost btn-sm">10. AI Caption</button>
+      <button id="btn-t11" class="btn btn-ghost btn-sm">11. เปิด TikTok</button>
+      <button id="btn-t12" class="btn btn-ghost btn-sm">12. ใส่ Caption</button>
+      <button id="btn-t13" class="btn btn-ghost btn-sm">13. ปักตะกร้า</button>
+      <button id="btn-t14" class="btn btn-ghost btn-sm">14. ติ๊ก AI-gen</button>
+    </div>
+  </div>
+
+  <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+    ⚡ = เสีย Flow credit | ปุ่มอื่นไม่เสีย | ต้องมีสินค้าใน Product Table
+  </div>
+</div>
+
+<!-- สถานะ Schedule -->
+<div id="scheduler-status" class="hidden" style="background:var(--accent-light); border:1px solid var(--accent); border-radius:8px; padding:10px 14px; margin-bottom:12px;">
+  <div class="flex justify-between items-center">
+    <span style="font-size:12px; font-weight:600; color:var(--accent);">⏰ Schedule ทำงานอยู่</span>
+    <button id="btn-stop-schedule" class="btn btn-danger btn-sm">หยุด Schedule</button>
+  </div>
+  <div id="scheduler-countdown" style="font-size:12px; color:var(--text-secondary); margin-top:4px;"></div>
+</div>
+
+<!-- ตั้งค่าพื้นฐาน -->
+<div class="section-title">ตั้งค่าพื้นฐาน</div>
+<div class="card">
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+    <div class="input-group">
+      <label>สัดส่วน</label>
+      <select id="vg-aspect-ratio">
+        <option value="9:16">แนวตั้ง 9:16</option>
+        <option value="16:9">แนวนอน 16:9</option>
+        <option value="1:1">สี่เหลี่ยม 1:1</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label>จำนวนคลิป</label>
+      <select id="vg-clip-count">
+        <option value="1">1 คลิป</option>
+        <option value="2">2 คลิป</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label>จำนวนภาพ</label>
+      <select id="vg-image-count">
+        <option value="1">1 ภาพ</option>
+        <option value="2">2 ภาพ</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label>มุมกล้อง</label>
+      <select id="vg-camera-angle">
+        <option value="auto">สุ่มอัตโนมัติ</option>
+        <option value="close-up face level">ระยะใกล้ (Close-up)</option>
+        <option value="medium shot waist-up">ระยะกลาง (Medium)</option>
+        <option value="wide establishing shot">ระยะไกล (Wide)</option>
+        <option value="eye-level straight-on shot">ระดับสายตา</option>
+        <option value="slight low angle looking up">มุมต่ำ (Low angle)</option>
+        <option value="high angle looking down">มุมสูง (High angle)</option>
+      </select>
+    </div>
+  </div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+    <div class="input-group">
+      <label>สไตล์ภาพ</label>
+      <select id="vg-image-style">
+        <option value="product_showcase">📸 แสดงสินค้า</option>
+        <option value="ugc_review">🤳 รีวิว UGC</option>
+        <option value="influencer">✨ Influencer</option>
+        <option value="ecommerce">🛒 E-commerce</option>
+        <option value="lifestyle">🏡 Lifestyle</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label>สไตล์วิดีโอ</label>
+      <select id="vg-video-style">
+        <option value="talk_ugc">🤳 รีวิวบ้านๆ (UGC)</option>
+        <option value="talk_excited">🔥 ตื่นเต้น Excited</option>
+        <option value="talk_cheerful">😊 ร่าเริง Cheerful</option>
+        <option value="talk_confident">💼 มั่นใจ Confident</option>
+        <option value="talk_soft">🌙 นุ่มนวล Soft/ASMR</option>
+      </select>
+    </div>
+  </div>
+  <div class="input-group">
+    <label>โมเดลวิดีโอ</label>
+    <select id="vg-video-model">
+      <option value="Veo 3.1 - Fast">Veo 3.1 - Fast (ใช้เครดิต)</option>
+      <option value="Veo 3.1">Veo 3.1</option>
+    </select>
+  </div>
+  <div class="input-group">
+    <label>โหมดการทำงาน</label>
+    <div class="btn-group">
+      <button class="btn btn-sm mode-btn active" data-mode="full">เต็มระบบ</button>
+      <button class="btn btn-ghost btn-sm mode-btn" data-mode="image_only">ภาพอย่าง</button>
+      <button class="btn btn-ghost btn-sm mode-btn" data-mode="clip_only">คลิปอย่าง</button>
+    </div>
+    <input type="hidden" id="vg-mode" value="full">
+  </div>
+</div>
+
+<!-- Toggles -->
+<div class="toggle-row">
+  <div class="toggle-info">
+    <span class="toggle-label">🚫 No Text Mode</span>
+    <span class="toggle-desc">ไม่มีตัวหนังสือในภาพและวิดีโอ</span>
+  </div>
+  <label class="switch">
+    <input type="checkbox" id="vg-no-text">
+    <span class="slider"></span>
+  </label>
+</div>
+
+<div class="toggle-row">
+  <div class="toggle-info">
+    <span class="toggle-label">⏭ Skip AI-generated</span>
+    <span class="toggle-desc">ข้ามขั้นตอนเปิด AI-generated content บน TikTok</span>
+  </div>
+  <label class="switch">
+    <input type="checkbox" id="vg-skip-ai-flag">
+    <span class="slider"></span>
+  </label>
+</div>
+
+<!-- Scheduling -->
+<div class="section-title">ตั้งเวลาลงคลิป</div>
+<div class="card">
+  <div style="display:grid; grid-template-columns:1fr auto; gap:8px; align-items:end;">
+    <div class="input-group" style="margin:0;">
+      <label>ลงคลิปทุก</label>
+      <select id="vg-schedule-interval">
+        <option value="0">ไม่ตั้งเวลา (รันต่อเนื่อง)</option>
+        <option value="30">ทุก 30 นาที</option>
+        <option value="60" selected>ทุก 1 ชั่วโมง</option>
+        <option value="120">ทุก 2 ชั่วโมง</option>
+        <option value="180">ทุก 3 ชั่วโมง</option>
+      </select>
+    </div>
+    <button id="btn-start-schedule" class="btn btn-primary btn-sm" style="height:38px;">⏰ เริ่ม Schedule</button>
+  </div>
+  <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">
+    💡 ตั้งเวลาป้องกันลงคลิปเยอะเกินไป ระบบจะสร้าง+โพสต์ทีละตัวตามเวลาที่กำหนด
+  </div>
+</div>
+
+<!-- Product Table -->
+<div class="section-title">
+  Product Table (<span id="vg-table-count">0</span>/500)
+</div>
+<div class="btn-group">
+  <button id="btn-vg-add-row" class="btn btn-primary btn-sm">+ Add Row</button>
+  <button id="btn-vg-from-tiktok" class="btn btn-ghost btn-sm">🛒 จาก tab สินค้า (<span id="vg-tiktok-count">0</span>)</button>
+  <button id="btn-vg-from-warehouse" class="btn btn-ghost btn-sm">🏪 จาก Warehouse (<span id="vg-warehouse-count">0</span>)</button>
+  <button id="btn-vg-clear-table" class="btn btn-ghost btn-sm" style="color:var(--error);">🗑️ ล้าง</button>
+</div>
+
+<div class="table-container" style="margin-top:8px;">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:30px;"><input type="checkbox" id="vg-select-all"></th>
+        <th>#</th>
+        <th>Product</th>
+        <th>Highlights</th>
+        <th>Code</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="vg-table-body">
+      <tr><td colspan="6" class="empty-state">ยังไม่มีสินค้า - กด Add Row หรือ Select from Warehouse</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Activity Log -->
+<div id="vg-activity-log" class="activity-log" style="margin-top:16px;">
+  <div class="activity-log-header">
+    <span class="activity-log-title">Activity Log</span>
+    <span class="activity-log-count">0 entries</span>
+  </div>
+  <div class="activity-log-list">
+    <div class="empty-state">ยังไม่มี activity</div>
+  </div>
+</div>
+
+<!-- Modal: Run Full Flow -->
+<div id="modal-run-flow" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title">🚀 Run Full Flow</div>
+    <div class="modal-desc">เลือกแถวเริ่มต้นสำหรับรัน Full Flow อัตโนมัติ<br>ระบบจะรันทั้ง 4 Steps ต่อเนื่องจนครบทุกแถว</div>
+    <div class="input-group">
+      <label>เริ่มจากแถว</label>
+      <select id="flow-start-row"></select>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+      <div class="input-group">
+        <label>หน่วงระหว่างแถว (วินาที)</label>
+        <div class="flex gap-4 items-center">
+          <input type="number" id="flow-delay-min" value="30" style="width:60px;"> ถึง
+          <input type="number" id="flow-delay-max" value="60" style="width:60px;">
+        </div>
+      </div>
+      <div class="input-group">
+        <label>เวลา GEN VDO (วินาที)</label>
+        <input type="number" id="flow-video-wait" value="240">
+      </div>
+    </div>
+    <div class="card" style="background:var(--bg-tertiary); padding:12px; font-size:12px;">
+      <strong>📋 ขั้นตอนที่จะรัน:</strong>
+      <ol style="margin:6px 0 0 16px; color:var(--text-secondary);">
+        <li>Think Prompt - สร้าง Video Prompt & Caption</li>
+        <li>GEN ภาพ - สร้างภาพด้วย Google Flow</li>
+        <li>GEN VDO - สร้างวิดีโอด้วย Google Flow</li>
+        <li>Post TikTok - โพสต์ลง TikTok อัตโนมัติ</li>
+      </ol>
+      <div style="color:var(--warning); margin-top:6px;">⚠️ แถวที่ทำเสร็จแล้วจะถูกข้ามอัตโนมัติ</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-modal-cancel">ยกเลิก</button>
+      <button id="btn-confirm-run" class="btn btn-primary">▶ เริ่มรัน</button>
+    </div>
+  </div>
+</div>

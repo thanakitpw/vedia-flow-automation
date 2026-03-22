@@ -1,0 +1,123 @@
+/* ===== Vedia Flow - Theme System ===== */
+/* ฟอนต์ Noto Sans Thai */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap');
+
+/* ===== Dark Theme (Default) ===== */
+[data-theme="dark"] {
+  --bg-primary: #0f0f12;
+  --bg-secondary: #18181b;
+  --bg-tertiary: #27272a;
+  --bg-hover: #2d2d32;
+  --bg-active: #3f3f46;
+
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --text-inverse: #18181b;
+
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
+  --accent-light: rgba(99, 102, 241, 0.15);
+
+  --success: #4ade80;
+  --success-bg: rgba(74, 222, 128, 0.1);
+  --warning: #fbbf24;
+  --warning-bg: rgba(251, 191, 36, 0.1);
+  --error: #f43f5e;
+  --error-bg: rgba(244, 63, 94, 0.1);
+  --info: #38bdf8;
+  --info-bg: rgba(56, 189, 248, 0.1);
+
+  --border: #333333;
+  --border-light: #27272a;
+  --shadow: rgba(0, 0, 0, 0.3);
+
+  --input-bg: #18181b;
+  --input-border: #3f3f46;
+  --input-focus: #6366f1;
+
+  --badge-bg: #27272a;
+  --scrollbar-thumb: #3f3f46;
+  --scrollbar-track: #18181b;
+}
+
+/* ===== Light Theme ===== */
+[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f4f4f5;
+  --bg-tertiary: #e4e4e7;
+  --bg-hover: #ececef;
+  --bg-active: #d4d4d8;
+
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-muted: #a1a1aa;
+  --text-inverse: #ffffff;
+
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-light: rgba(79, 70, 229, 0.1);
+
+  --success: #16a34a;
+  --success-bg: rgba(22, 163, 74, 0.08);
+  --warning: #d97706;
+  --warning-bg: rgba(217, 119, 6, 0.08);
+  --error: #dc2626;
+  --error-bg: rgba(220, 38, 38, 0.08);
+  --info: #0284c7;
+  --info-bg: rgba(2, 132, 199, 0.08);
+
+  --border: #e4e4e7;
+  --border-light: #f4f4f5;
+  --shadow: rgba(0, 0, 0, 0.08);
+
+  --input-bg: #ffffff;
+  --input-border: #d4d4d8;
+  --input-focus: #4f46e5;
+
+  --badge-bg: #f4f4f5;
+  --scrollbar-thumb: #d4d4d8;
+  --scrollbar-track: #f4f4f5;
+}
+
+/* ===== Global Reset & Base ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  font-family: 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ===== Selection ===== */
+::selection {
+  background: var(--accent);
+  color: #fff;
+}

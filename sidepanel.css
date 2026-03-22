@@ -1,0 +1,238 @@
+/* ===== Vedia Flow - Sidepanel Layout ===== */
+
+/* ===== Auth Overlay ===== */
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-primary);
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+
+.auth-overlay.hidden {
+  display: none;
+}
+
+.auth-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 16px;
+}
+
+.auth-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.auth-version {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.auth-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+.auth-input {
+  width: 100%;
+  max-width: 280px;
+  padding: 12px;
+  text-align: center;
+  font-family: monospace;
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+.auth-btn {
+  width: 100%;
+  max-width: 280px;
+  height: 44px;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.auth-msg {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--error);
+  min-height: 20px;
+}
+
+.auth-device {
+  margin-top: 24px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ===== Header ===== */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.brand-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.brand-info h1 {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.brand-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-version {
+  font-size: 11px;
+  background: var(--accent-light);
+  color: var(--accent);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.expire-badge {
+  display: none;
+  align-items: center;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.expire-badge.safe {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.expire-badge.warning {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.expire-badge.danger {
+  background: var(--error-bg);
+  color: var(--error);
+}
+
+.expire-badge.lifetime {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+  color: #a78bfa;
+}
+
+.header-actions {
+  display: flex;
+  gap: 4px;
+}
+
+/* ===== Tab Navigation ===== */
+.tab-nav {
+  display: flex;
+  overflow-x: auto;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  scrollbar-width: none;
+}
+
+.tab-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-btn {
+  flex: 0 0 auto;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-family: 'Noto Sans Thai', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+/* ===== Tab Content ===== */
+.tab-content {
+  padding: 16px;
+  min-height: calc(100vh - 100px);
+}
+
+/* ===== Loading ===== */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
