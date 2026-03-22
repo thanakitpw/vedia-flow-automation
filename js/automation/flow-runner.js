@@ -262,6 +262,11 @@ const FlowRunner = {
           await TikTokPoster.clickPost(ttTabId);
           log(`[17] ✅ กด Post สำเร็จ! 🚀`, 'success');
 
+          // รอ 3 วิ แล้ว redirect กลับหน้า upload ใหม่ (สำหรับสินค้าถัดไป)
+          await DOMHelpers.sleep(3000);
+          await chrome.tabs.update(ttTabId, { url: 'https://www.tiktok.com/tiktokstudio/upload?from=creator_center' });
+          log(`[17] กลับหน้า upload สำหรับสินค้าถัดไป`, 'info');
+
         } catch (err) {
           log(`[11-17] ❌ ${err.message}`, 'error');
           row.status = 'error'; row.errorMessage = err.message;
