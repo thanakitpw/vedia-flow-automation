@@ -803,30 +803,38 @@ const FlowAutomation = {
   },
 
   // ===== Fetch video blob จาก Google Flow แล้วเก็บใน IndexedDB =====
-  async fetchAndStoreVideo(tabId) {
-    // ดึง video src จาก Flow (retry สูงสุด 5 ครั้ง)
+  // oldSrcs = video srcs ก่อน generate (เพื่อหาเฉพาะตัวใหม่)
+  async fetchAndStoreVideo(tabId, oldSrcs = []) {
+    // ดึง video src ใหม่จาก Flow (retry สูงสุด 5 ครั้ง)
     let videoData = null;
 
     for (let attempt = 1; attempt <= 5; attempt++) {
       const videoResult = await chrome.scripting.executeScript({
         target: { tabId },
-        func: () => {
+        func: (oldSrcs) => {
           window.scrollTo(0, 0);
 
-          // หา video ทั้งหมด
           const videos = Array.from(document.querySelectorAll('video'));
 
-          // หาตัวที่มี src
+          // หาวิดีโอใหม่ (ที่ไม่อยู่ใน oldSrcs)
           for (const video of videos) {
             const src = video.getAttribute('src') || video.currentSrc || video.src;
-            if (src && src.length > 10) return { success: true, src, total: videos.length };
-
-            const sourceTag = video.querySelector('source');
-            if (sourceTag?.src) return { success: true, src: sourceTag.src, total: videos.length };
+            if (src && src.length > 10 && !oldSrcs.includes(src)) {
+              return { success: true, src, total: videos.length, isNew: true };
+            }
           }
 
-          return { success: false, error: `ไม่พบวิดีโอที่มี src (พบ ${videos.length} video elements)` };
+          // ถ้าไม่มี oldSrcs → เอาตัวแรกที่เจอ
+          if (oldSrcs.length === 0) {
+            for (const video of videos) {
+              const src = video.getAttribute('src') || video.currentSrc || video.src;
+              if (src && src.length > 10) return { success: true, src, total: videos.length, isNew: false };
+            }
+          }
+
+          return { success: false, error: `ไม่พบวิดีโอใหม่ (พบ ${videos.length} video, เดิม ${oldSrcs.length})` };
         },
+        args: [oldSrcs],
       });
 
       videoData = videoResult?.[0]?.result;
@@ -837,7 +845,7 @@ const FlowAutomation = {
     }
 
     if (!videoData?.success) {
-      return { success: false, error: videoData?.error || 'ดึง video src ไม่สำเร็จ (5 attempts)' };
+      return { success: false, error: videoData?.error || 'ดึง video src ไม่สำเร็จ' };
     }
 
     // Fetch video blob ผ่าน content script (ใน context ของ Flow)

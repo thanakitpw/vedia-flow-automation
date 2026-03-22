@@ -179,7 +179,17 @@ const FlowRunner = {
           await FlowAutomation.fillPrompt(tabId, row.videoPrompt);
           await DOMHelpers.sleep(getAutomationDelay('afterFillPrompt'));
 
-          // 9. กด Generate Video
+          // 9. จำ video เดิม → กด Generate → หาตัวใหม่
+          // snapshot video srcs ก่อน generate
+          const oldVidResult = await chrome.scripting.executeScript({
+            target: { tabId },
+            func: () => Array.from(document.querySelectorAll('video'))
+              .map(v => v.getAttribute('src') || v.currentSrc || v.src || '')
+              .filter(Boolean),
+          });
+          const oldVideoSrcs = oldVidResult?.[0]?.result || [];
+          log(`[9] จำวิดีโอเดิม ${oldVideoSrcs.length} ตัว`, 'info');
+
           log(`[9] กด Generate Video...`, 'info');
           await FlowAutomation.clickGenerate(tabId);
           log(`[9] ✅ กด Generate แล้ว! รอสร้างวิดีโอ...`, 'success');
@@ -192,9 +202,9 @@ const FlowRunner = {
           await ProgressOverlay.hide(tabId);
           log(`[9] ✅ สร้างวิดีโอเสร็จ!`, 'success');
 
-          // 10. ดึง video blob → เก็บ IndexedDB
-          log(`[10] ดึงไฟล์วิดีโอ...`, 'info');
-          const fetchResult = await FlowAutomation.fetchAndStoreVideo(tabId);
+          // 10. หาวิดีโอใหม่ (ที่ไม่อยู่ใน snapshot) แล้วเก็บ IndexedDB
+          log(`[10] ดึงไฟล์วิดีโอใหม่...`, 'info');
+          const fetchResult = await FlowAutomation.fetchAndStoreVideo(tabId, oldVideoSrcs);
           if (fetchResult.success) {
             log(`[10] ✅ บันทึกวิดีโอ ${(fetchResult.size / 1024 / 1024).toFixed(1)}MB`, 'success');
           } else {
