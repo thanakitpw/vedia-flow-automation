@@ -6,7 +6,7 @@ const PromptBuilder = {
   // ===== Video Prompt Templates =====
   // ใช้ "The character" เพื่อให้ Google Flow ใช้คนจากรูป reference
   // CTA สำหรับต่อท้ายทุก template
-  cartCTA: `At the end, the character subtly points or gestures downward and says in Thai "สามารถเลือกซื้อในตะกร้าได้เลยนะคะ" with a warm, inviting smile.`,
+  cartCTA: `At the end, the character subtly points or gestures downward and says in Thai "สามารถเลือกซื้อในตะกร้าได้เลย" with a warm, inviting smile.`,
 
   videoTemplates: {
     'talk_ugc': `Cinematic smartphone selfie-style video. An authentic, unscripted UGC review of [product]. The character looks directly into the lens like a real everyday customer sharing a genuine 'after-use' experience. The character is speaking in Thai with a highly natural, word-of-mouth tone.`,
