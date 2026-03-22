@@ -167,6 +167,13 @@ const TikTokPoster = {
           editor.click();
           await sleep(500);
 
+          // ลบ caption เดิมที่มีอยู่ก่อน (Ctrl+A แล้ว Backspace)
+          editor.focus();
+          editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', ctrlKey: true, metaKey: true, bubbles: true }));
+          await sleep(200);
+          editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', keyCode: 8, bubbles: true }));
+          await sleep(500);
+
           // ใช้ clipboard API + paste event (เหมือน Ctrl+V)
           try {
             await navigator.clipboard.writeText(text);
