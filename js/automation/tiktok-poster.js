@@ -2,19 +2,22 @@
 // โพสต์วิดีโอขึ้น TikTok Studio อัตโนมัติ พร้อมปักตะกร้า
 
 const TikTokPoster = {
-  // หา TikTok Studio tab หรือเปิดใหม่ + focus ไปที่ tab นั้น
+  uploadUrl: 'https://www.tiktok.com/tiktokstudio/upload?from=creator_center',
+
+  // เปิดหน้า upload ของ TikTok Studio (ไปที่ URL upload ทุกครั้ง)
   async getTikTokTab() {
     const tabs = await chrome.tabs.query({ url: '*://*.tiktok.com/*' });
     const studioTab = tabs.find(t => t.url.includes('tiktokstudio'));
 
     if (studioTab) {
-      // มี tab อยู่แล้ว → focus ไปที่ tab นั้น
-      await chrome.tabs.update(studioTab.id, { active: true });
+      // มี tab อยู่แล้ว → navigate ไปหน้า upload + focus
+      await chrome.tabs.update(studioTab.id, { url: this.uploadUrl, active: true });
+      await DOMHelpers.sleep(5000);
       return studioTab;
     }
 
-    // เปิด tab ใหม่ (จะ active อัตโนมัติ)
-    const newTab = await chrome.tabs.create({ url: 'https://www.tiktok.com/tiktokstudio/upload' });
+    // เปิด tab ใหม่
+    const newTab = await chrome.tabs.create({ url: this.uploadUrl });
     await DOMHelpers.sleep(5000);
     return newTab;
   },

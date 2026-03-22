@@ -265,7 +265,7 @@ const FlowRunner = {
           // รอ 60 วิ ให้ TikTok ประมวลผลเสร็จ แล้ว redirect กลับหน้า upload
           log(`[17] รอ 60 วินาที ให้ TikTok ประมวลผล...`, 'info');
           await DOMHelpers.sleep(60000);
-          await chrome.tabs.update(ttTabId, { url: 'https://www.tiktok.com/tiktokstudio/upload?from=creator_center' });
+          await chrome.tabs.update(ttTabId, { url: TikTokPoster.uploadUrl });
           log(`[17] กลับหน้า upload สำหรับสินค้าถัดไป`, 'info');
 
         } catch (err) {
