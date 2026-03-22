@@ -804,47 +804,40 @@ const FlowAutomation = {
 
   // ===== Fetch video blob จาก Google Flow แล้วเก็บใน IndexedDB =====
   async fetchAndStoreVideo(tabId) {
-    // ดึง video src จาก Flow
-    const videoResult = await chrome.scripting.executeScript({
-      target: { tabId },
-      func: async () => {
-        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+    // ดึง video src จาก Flow (retry สูงสุด 5 ครั้ง)
+    let videoData = null;
 
-        // scroll ขึ้นบนสุดเพื่อหา video
-        window.scrollTo(0, 0);
-        await sleep(1000);
+    for (let attempt = 1; attempt <= 5; attempt++) {
+      const videoResult = await chrome.scripting.executeScript({
+        target: { tabId },
+        func: () => {
+          window.scrollTo(0, 0);
 
-        // หา video elements
-        // scroll ไปบนสุดเพื่อหาวิดีโอล่าสุด
-        window.scrollTo(0, 0);
-        await sleep(1000);
+          // หา video ทั้งหมด
+          const videos = Array.from(document.querySelectorAll('video'));
 
-        const videos = Array.from(document.querySelectorAll('video'));
-        const validVideos = videos.filter(v => {
-          const rect = v.getBoundingClientRect();
-          const src = v.getAttribute('src') || v.currentSrc || v.src;
-          return rect.width > 150 && src;
-        });
+          // หาตัวที่มี src
+          for (const video of videos) {
+            const src = video.getAttribute('src') || video.currentSrc || video.src;
+            if (src && src.length > 10) return { success: true, src, total: videos.length };
 
-        if (validVideos.length === 0) return { success: false, error: 'ไม่พบวิดีโอ' };
+            const sourceTag = video.querySelector('source');
+            if (sourceTag?.src) return { success: true, src: sourceTag.src, total: videos.length };
+          }
 
-        // เอาวิดีโอตัวแรก (ซ้ายสุด/บนสุด = ล่าสุดใน Google Flow)
-        const video = validVideos[0];
-        const src = video.getAttribute('src') || video.currentSrc || video.src;
+          return { success: false, error: `ไม่พบวิดีโอที่มี src (พบ ${videos.length} video elements)` };
+        },
+      });
 
-        if (!src) {
-          const sourceTag = video.querySelector('source');
-          if (sourceTag) return { success: true, src: sourceTag.src };
-          return { success: false, error: 'ไม่พบ video src' };
-        }
+      videoData = videoResult?.[0]?.result;
+      if (videoData?.success) break;
 
-        return { success: true, src };
-      },
-    });
+      Logger.addLog(`ดึงวิดีโอ attempt ${attempt}/5: ${videoData?.error}`, 'info');
+      await DOMHelpers.sleep(5000);
+    }
 
-    const videoData = videoResult?.[0]?.result;
     if (!videoData?.success) {
-      return { success: false, error: videoData?.error || 'ดึง video src ไม่สำเร็จ' };
+      return { success: false, error: videoData?.error || 'ดึง video src ไม่สำเร็จ (5 attempts)' };
     }
 
     // Fetch video blob ผ่าน content script (ใน context ของ Flow)
