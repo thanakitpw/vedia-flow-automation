@@ -5,15 +5,16 @@
   <title>Vedia Flow - Icon Generator</title>
   <style>
     body { font-family: sans-serif; text-align: center; padding: 40px; background: #0f0f12; color: #fff; }
-    canvas { border: 1px solid #333; margin: 10px; }
+    canvas { border: 1px solid #333; margin: 10px; border-radius: 8px; }
     button { padding: 12px 24px; background: #6366f1; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 10px; }
     button:hover { background: #4f46e5; }
+    .preview { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin: 20px 0; }
   </style>
 </head>
 <body>
   <h1>Vedia Flow - Icon Generator</h1>
   <p>กดปุ่มด้านล่างเพื่อ download icons ทุกขนาด</p>
-  <div id="canvases"></div>
+  <div class="preview" id="canvases"></div>
   <br>
   <button onclick="downloadAll()">Download All Icons</button>
 
@@ -26,10 +27,11 @@
       canvas.height = size;
       const ctx = canvas.getContext('2d');
 
-      // พื้นหลังไล่สี
+      // พื้นหลังไล่สี (ม่วง → น้ำเงิน)
       const gradient = ctx.createLinearGradient(0, 0, size, size);
       gradient.addColorStop(0, '#6366f1');
-      gradient.addColorStop(1, '#8b5cf6');
+      gradient.addColorStop(0.5, '#7c3aed');
+      gradient.addColorStop(1, '#4f46e5');
       ctx.fillStyle = gradient;
 
       // วาดสี่เหลี่ยมมุมมน
@@ -47,14 +49,29 @@
       ctx.closePath();
       ctx.fill();
 
-      // วาดตัว "V"
+      // วาดตัว V สีขาว
       ctx.fillStyle = '#ffffff';
-      ctx.font = `bold ${size * 0.55}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('V', size / 2, size / 2);
+      ctx.strokeStyle = '#ffffff';
+      const thick = Math.max(2, size * 0.12);
+      ctx.lineWidth = thick;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
 
-      document.getElementById('canvases').appendChild(canvas);
+      ctx.beginPath();
+      ctx.moveTo(size * 0.22, size * 0.22);
+      ctx.lineTo(size * 0.50, size * 0.78);
+      ctx.lineTo(size * 0.78, size * 0.22);
+      ctx.stroke();
+
+      // เพิ่มเงาเล็กน้อย
+      ctx.shadowColor = 'rgba(0,0,0,0.2)';
+      ctx.shadowBlur = size * 0.05;
+
+      const wrapper = document.createElement('div');
+      wrapper.style.textAlign = 'center';
+      wrapper.innerHTML = `<div style="color:#888;font-size:12px;margin-top:4px;">${size}x${size}</div>`;
+      wrapper.prepend(canvas);
+      document.getElementById('canvases').appendChild(wrapper);
       return canvas;
     }
 
