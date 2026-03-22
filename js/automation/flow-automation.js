@@ -801,4 +801,94 @@ const FlowAutomation = {
       },
     });
   },
+
+  // ===== Fetch video blob จาก Google Flow แล้วเก็บใน IndexedDB =====
+  async fetchAndStoreVideo(tabId) {
+    // ดึง video src จาก Flow
+    const videoResult = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: async () => {
+        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+        // scroll ขึ้นบนสุดเพื่อหา video
+        window.scrollTo(0, 0);
+        await sleep(1000);
+
+        // หา video elements
+        const videos = Array.from(document.querySelectorAll('video'));
+        const validVideos = videos.filter(v => {
+          const rect = v.getBoundingClientRect();
+          return rect.width > 150;
+        });
+
+        if (validVideos.length === 0) return { success: false, error: 'ไม่พบวิดีโอ' };
+
+        // เอาวิดีโอตัวแรก (ล่าสุด)
+        const video = validVideos[0];
+        const src = video.getAttribute('src') || video.currentSrc || video.src;
+
+        if (!src) {
+          const sourceTag = video.querySelector('source');
+          if (sourceTag) return { success: true, src: sourceTag.src };
+          return { success: false, error: 'ไม่พบ video src' };
+        }
+
+        return { success: true, src };
+      },
+    });
+
+    const videoData = videoResult?.[0]?.result;
+    if (!videoData?.success) {
+      return { success: false, error: videoData?.error || 'ดึง video src ไม่สำเร็จ' };
+    }
+
+    // Fetch video blob ผ่าน content script (ใน context ของ Flow)
+    const blobResult = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: async (videoSrc) => {
+        try {
+          const absoluteUrl = new URL(videoSrc, window.location.origin).href;
+          const response = await fetch(absoluteUrl);
+          if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
+
+          const blob = await response.blob();
+
+          // แปลง blob เป็น ArrayBuffer เพื่อส่งกลับ
+          const arrayBuffer = await blob.arrayBuffer();
+          return {
+            success: true,
+            buffer: Array.from(new Uint8Array(arrayBuffer)),
+            type: blob.type || 'video/mp4',
+            size: blob.size,
+          };
+        } catch (err) {
+          return { success: false, error: err.message };
+        }
+      },
+      args: [videoData.src],
+    });
+
+    const blobData = blobResult?.[0]?.result;
+    if (!blobData?.success) {
+      return { success: false, error: blobData?.error || 'Fetch blob ไม่สำเร็จ' };
+    }
+
+    // สร้าง Blob จาก ArrayBuffer แล้วเก็บใน IndexedDB
+    const uint8Array = new Uint8Array(blobData.buffer);
+    const videoBlob = new Blob([uint8Array], { type: blobData.type });
+
+    await BlobStorage.save('current_video', videoBlob, {
+      type: blobData.type,
+      size: blobData.size,
+      src: videoData.src,
+    });
+
+    Logger.addLog(`บันทึกวิดีโอ ${(blobData.size / 1024 / 1024).toFixed(1)}MB ลง IndexedDB สำเร็จ`, 'success');
+
+    return {
+      success: true,
+      size: blobData.size,
+      type: blobData.type,
+    };
+  },
 };

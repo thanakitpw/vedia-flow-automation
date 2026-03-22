@@ -275,6 +275,15 @@ const FlowRunner = {
           await ProgressOverlay.hide(tabId);
           log(`[Step 3/4] ✅ สร้างวิดีโอเสร็จ!`, 'success');
 
+          // ดึง video blob จาก Flow แล้วเก็บใน IndexedDB
+          log(`[Step 3/4] กำลังดึงไฟล์วิดีโอ...`, 'info');
+          const fetchResult = await FlowAutomation.fetchAndStoreVideo(tabId);
+          if (fetchResult.success) {
+            log(`[Step 3/4] ✅ บันทึกวิดีโอ ${(fetchResult.size / 1024 / 1024).toFixed(1)}MB สำเร็จ`, 'success');
+          } else {
+            log(`[Step 3/4] ⚠️ ดึงวิดีโอไม่สำเร็จ: ${fetchResult.error}`, 'warning');
+          }
+
         } catch (err) {
           log(`[Step 3/4] ❌ Error: ${err.message}`, 'error');
           row.status = 'error';
@@ -300,6 +309,17 @@ const FlowRunner = {
             productName: row.productName,
             message: 'กำลังอัพโหลดวิดีโอ...',
           });
+
+          // อัพโหลดวิดีโอจาก IndexedDB เข้า TikTok
+          log(`[Step 4/4] อัพโหลดวิดีโอไป TikTok...`, 'info');
+          const uploadResult = await TikTokPoster.uploadVideoFromStorage(ttTabId);
+          const uploadData = uploadResult?.[0]?.result;
+          if (uploadData?.success) {
+            log(`[Step 4/4] ✅ อัพโหลดวิดีโอสำเร็จ (${uploadData.method})`, 'success');
+          } else {
+            log(`[Step 4/4] ⚠️ อัพโหลดวิดีโอไม่สำเร็จ: ${uploadData?.error}`, 'warning');
+          }
+          await DOMHelpers.sleep(5000); // รอ TikTok ประมวลผล
 
           // ใส่ Caption
           await DOMHelpers.sleep(getActionDelay());

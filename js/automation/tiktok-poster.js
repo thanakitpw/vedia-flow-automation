@@ -15,7 +15,87 @@ const TikTokPoster = {
     return newTab;
   },
 
-  // อัพโหลดวิดีโอ
+  // อัพโหลดวิดีโอจาก IndexedDB → TikTok Studio file input
+  async uploadVideoFromStorage(tabId) {
+    // อ่าน blob จาก IndexedDB
+    const record = await BlobStorage.get('current_video');
+    if (!record || !record.blob) {
+      return [{ result: { success: false, error: 'ไม่พบวิดีโอใน storage - ต้องสร้างวิดีโอก่อน' } }];
+    }
+
+    // แปลง blob เป็น ArrayBuffer เพื่อส่งไป content script
+    const arrayBuffer = await record.blob.arrayBuffer();
+    const uint8Array = Array.from(new Uint8Array(arrayBuffer));
+    const mimeType = record.type || 'video/mp4';
+
+    Logger.addLog(`กำลังอัพโหลดวิดีโอ ${(record.size / 1024 / 1024).toFixed(1)}MB ไป TikTok...`, 'info');
+
+    return chrome.scripting.executeScript({
+      target: { tabId },
+      func: (videoBytes, mimeType) => {
+        return new Promise(async (resolve) => {
+          try {
+            const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+            // สร้าง File จาก bytes
+            const uint8 = new Uint8Array(videoBytes);
+            const blob = new Blob([uint8], { type: mimeType });
+            const file = new File([blob], 'vedia_video.mp4', { type: mimeType });
+
+            // หา file input
+            const fileInputs = document.querySelectorAll('input[type="file"]');
+            let targetInput = null;
+            for (const input of fileInputs) {
+              if (!input.accept || input.accept.includes('video') || input.accept.includes('*')) {
+                targetInput = input;
+                break;
+              }
+            }
+            if (!targetInput && fileInputs.length > 0) {
+              targetInput = fileInputs[0];
+            }
+
+            if (!targetInput) {
+              // Fallback: หา upload zone แล้ว simulate drop
+              const dropZone = document.querySelector('[class*="upload"], [class*="Upload"], [class*="drop"]');
+              if (dropZone) {
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                const dropEvent = new DragEvent('drop', {
+                  bubbles: true,
+                  cancelable: true,
+                  dataTransfer: dt,
+                });
+                dropZone.dispatchEvent(new DragEvent('dragenter', { bubbles: true }));
+                dropZone.dispatchEvent(new DragEvent('dragover', { bubbles: true }));
+                dropZone.dispatchEvent(dropEvent);
+                await sleep(2000);
+                return resolve({ success: true, method: 'drop' });
+              }
+              return resolve({ success: false, error: 'ไม่พบ file input หรือ upload zone' });
+            }
+
+            // Set file via DataTransfer
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            targetInput.files = dt.files;
+
+            // Dispatch events เหมือน user จริง
+            targetInput.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+            targetInput.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+
+            await sleep(2000);
+            resolve({ success: true, method: 'fileInput', size: blob.size });
+          } catch (err) {
+            resolve({ success: false, error: err.message });
+          }
+        });
+      },
+      args: [uint8Array, mimeType],
+    });
+  },
+
+  // Legacy: อัพโหลดวิดีโอจาก dataUrl (ใช้สำหรับไฟล์เล็ก)
   async uploadVideo(tabId, videoDataUrl) {
     return chrome.scripting.executeScript({
       target: { tabId },

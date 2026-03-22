@@ -25,7 +25,7 @@ const TabVideoGen = {
     document.getElementById('btn-stop-flow')?.addEventListener('click', () => this.stopFlow());
 
     // ปุ่มทดสอบ
-    for (let i = 1; i <= 14; i++) {
+    for (let i = 1; i <= 16; i++) {
       document.getElementById(`btn-t${i}`)?.addEventListener('click', () => this.runTestStep(i));
     }
 
@@ -412,11 +412,13 @@ const TabVideoGen = {
         case 7: await this._t7_pasteReference(row); break;
         case 8: await this._t8_fillVideoPrompt(row); break;
         case 9: await this._t9_generateVideo(); break;
-        case 10: await this._t10_aiCaption(row); break;
-        case 11: await this._t11_openTikTok(); break;
-        case 12: await this._t12_fillCaption(); break;
-        case 13: await this._t13_addCart(row); break;
-        case 14: await this._t14_aiFlag(); break;
+        case 10: await this._t10_fetchVideo(); break;
+        case 11: await this._t11_aiCaption(row); break;
+        case 12: await this._t12_openTikTok(); break;
+        case 13: await this._t13_uploadVideo(); break;
+        case 14: await this._t14_fillCaption(); break;
+        case 15: await this._t15_addCart(row); break;
+        case 16: await this._t16_aiFlag(); break;
       }
     } catch (err) {
       Logger.addLog(`🧪 ❌ Step ${step} Error: ${err.message}`, 'error');
@@ -577,9 +579,24 @@ const TabVideoGen = {
     showToast('กด Generate Video แล้ว!', 'success');
   },
 
-  // 10. AI สร้าง Caption
-  async _t10_aiCaption(row) {
-    Logger.addLog('🧪 [10] AI สร้าง Caption...', 'info');
+  // 10. ดึงวิดีโอจาก Flow → เก็บ IndexedDB
+  async _t10_fetchVideo() {
+    Logger.addLog('🧪 [10] ดึงวิดีโอจาก Google Flow...', 'info');
+    const tabId = await this._getFlowTab();
+
+    const result = await FlowAutomation.fetchAndStoreVideo(tabId);
+    if (result.success) {
+      Logger.addLog(`🧪 ✅ บันทึกวิดีโอ ${(result.size / 1024 / 1024).toFixed(1)}MB สำเร็จ!`, 'success');
+      showToast(`ดึงวิดีโอ ${(result.size / 1024 / 1024).toFixed(1)}MB สำเร็จ!`, 'success');
+    } else {
+      Logger.addLog(`🧪 ❌ ${result.error}`, 'error');
+      showToast(result.error, 'error');
+    }
+  },
+
+  // 11. AI สร้าง Caption
+  async _t11_aiCaption(row) {
+    Logger.addLog('🧪 [11] AI สร้าง Caption...', 'info');
     const settings = await Storage.getSettings();
     const apiKey = settings.apiKeys?.[settings.aiProvider];
     if (!apiKey) { showToast('ตั้ง API Key ก่อน (tab ตั้งค่า)', 'error'); return; }
@@ -590,17 +607,33 @@ const TabVideoGen = {
     showToast('สร้าง Caption สำเร็จ!', 'success');
   },
 
-  // 11. เปิด TikTok Studio
-  async _t11_openTikTok() {
-    Logger.addLog('🧪 [11] เปิด TikTok Studio...', 'info');
+  // 12. เปิด TikTok Studio
+  async _t12_openTikTok() {
+    Logger.addLog('🧪 [12] เปิด TikTok Studio...', 'info');
     const tab = await TikTokPoster.getTikTokTab();
     Logger.addLog(`🧪 ✅ เปิด TikTok Studio สำเร็จ!`, 'success');
     showToast('เปิด TikTok Studio สำเร็จ!', 'success');
   },
 
-  // 12. ใส่ Caption
-  async _t12_fillCaption() {
-    Logger.addLog('🧪 [12] ใส่ Caption...', 'info');
+  // 13. อัพโหลดวิดีโอจาก IndexedDB → TikTok
+  async _t13_uploadVideo() {
+    Logger.addLog('🧪 [13] อัพโหลดวิดีโอไป TikTok...', 'info');
+    const tabId = await this._getTikTokTab();
+
+    const result = await TikTokPoster.uploadVideoFromStorage(tabId);
+    const data = result?.[0]?.result;
+    if (data?.success) {
+      Logger.addLog(`🧪 ✅ อัพโหลดสำเร็จ! (${data.method})`, 'success');
+      showToast(`อัพโหลดวิดีโอสำเร็จ! (${data.method})`, 'success');
+    } else {
+      Logger.addLog(`🧪 ❌ ${data?.error || 'อัพโหลดไม่สำเร็จ'}`, 'error');
+      showToast(data?.error || 'อัพโหลดไม่สำเร็จ', 'error');
+    }
+  },
+
+  // 14. ใส่ Caption
+  async _t14_fillCaption() {
+    Logger.addLog('🧪 [14] ใส่ Caption...', 'info');
     const tabId = await this._getTikTokTab();
     const caption = this._testCaption || '🔥 สินค้าดี ต้องลอง! กดตะกร้าเลย\n#สินค้าดี #tiktokshop';
     await TikTokPoster.fillCaption(tabId, caption);
@@ -608,9 +641,9 @@ const TabVideoGen = {
     showToast('ใส่ Caption สำเร็จ!', 'success');
   },
 
-  // 13. ปักตะกร้า
-  async _t13_addCart(row) {
-    Logger.addLog('🧪 [13] ปักตะกร้า...', 'info');
+  // 15. ปักตะกร้า
+  async _t15_addCart(row) {
+    Logger.addLog('🧪 [15] ปักตะกร้า...', 'info');
     const tabId = await this._getTikTokTab();
     const name = row?.productName || 'สินค้าทดสอบ';
     await TikTokPoster.addProductLink(tabId, name);
@@ -618,9 +651,9 @@ const TabVideoGen = {
     showToast('กดปุ่มปักตะกร้าแล้ว!', 'success');
   },
 
-  // 14. ติ๊ก AI-generated
-  async _t14_aiFlag() {
-    Logger.addLog('🧪 [14] ติ๊ก AI-generated...', 'info');
+  // 16. ติ๊ก AI-generated
+  async _t16_aiFlag() {
+    Logger.addLog('🧪 [16] ติ๊ก AI-generated...', 'info');
     const tabId = await this._getTikTokTab();
     await TikTokPoster.setAIGeneratedFlag(tabId, true);
     Logger.addLog('🧪 ✅ ติ๊ก AI-generated สำเร็จ!', 'success');
