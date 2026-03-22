@@ -815,15 +815,20 @@ const FlowAutomation = {
         await sleep(1000);
 
         // หา video elements
+        // scroll ไปบนสุดเพื่อหาวิดีโอล่าสุด
+        window.scrollTo(0, 0);
+        await sleep(1000);
+
         const videos = Array.from(document.querySelectorAll('video'));
         const validVideos = videos.filter(v => {
           const rect = v.getBoundingClientRect();
-          return rect.width > 150;
+          const src = v.getAttribute('src') || v.currentSrc || v.src;
+          return rect.width > 150 && src;
         });
 
         if (validVideos.length === 0) return { success: false, error: 'ไม่พบวิดีโอ' };
 
-        // เอาวิดีโอตัวแรก (ล่าสุด)
+        // เอาวิดีโอตัวแรก (ซ้ายสุด/บนสุด = ล่าสุดใน Google Flow)
         const video = validVideos[0];
         const src = video.getAttribute('src') || video.currentSrc || video.src;
 
@@ -873,7 +878,9 @@ const FlowAutomation = {
       return { success: false, error: blobData?.error || 'Fetch blob ไม่สำเร็จ' };
     }
 
-    // สร้าง Blob จาก ArrayBuffer แล้วเก็บใน IndexedDB
+    // ล้าง blob เก่าก่อน แล้วเก็บตัวใหม่ใน IndexedDB
+    await BlobStorage.remove('current_video');
+
     const uint8Array = new Uint8Array(blobData.buffer);
     const videoBlob = new Blob([uint8Array], { type: blobData.type });
 

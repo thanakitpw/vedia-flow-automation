@@ -5,6 +5,9 @@ const PromptBuilder = {
 
   // ===== Video Prompt Templates =====
   // ใช้ "The character" เพื่อให้ Google Flow ใช้คนจากรูป reference
+  // CTA สำหรับต่อท้ายทุก template
+  cartCTA: `At the end, the character subtly points or gestures downward and says in Thai "สามารถเลือกซื้อในตะกร้าได้เลยนะคะ" with a warm, inviting smile.`,
+
   videoTemplates: {
     'talk_ugc': `Cinematic smartphone selfie-style video. An authentic, unscripted UGC review of [product]. The character looks directly into the lens like a real everyday customer sharing a genuine 'after-use' experience. The character is speaking in Thai with a highly natural, word-of-mouth tone.`,
     'talk_excited': `Bright aesthetic lighting. The character is enthusiastically presenting [product] to the viewer. High energy, friendly influencer vibe, sharing a great deal. The character is speaking in Thai with a lively, natural tone.`,
@@ -40,6 +43,9 @@ const PromptBuilder = {
     if (cameraAngle && cameraAngle !== 'auto') {
       template += ` Camera angle: ${cameraAngle}.`;
     }
+
+    // เพิ่ม CTA ตะกร้า
+    template += ' ' + this.cartCTA;
 
     // เพิ่ม safety rules
     template += ' ' + this.safetyRules;
