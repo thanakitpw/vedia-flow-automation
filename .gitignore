@@ -1,0 +1,17 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Reference files (ไม่ต้อง push)
+docs/reference/
+
+# Original logo (ใหญ่เกินไป)
+icons/vedia_logo_original.png
+
+# Temp
+*.tmp
+*.log

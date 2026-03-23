@@ -18,7 +18,7 @@
 - Data storage: `chrome.storage.local`
 
 ## อ้างอิง
-- PROMPT&PLAY AUTO GEN PRO 4.2 (ZIP ในโปรเจค) - ใช้เป็น reference สำหรับ DOM automation patterns
+- PROMPT&PLAY AUTO GEN PRO 4.2 (อยู่ที่ `docs/reference/`) - ใช้เป็น reference สำหรับ DOM automation patterns
 - อ่าน ZIP ด้วย Python zipfile module
 
 ## แนวทางการทำงาน

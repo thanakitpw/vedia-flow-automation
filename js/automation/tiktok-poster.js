@@ -166,15 +166,14 @@ const TikTokPoster = {
           // คลิกที่ editor เพื่อ focus
           editor.click();
           await sleep(500);
-
-          // ลบ caption เดิมที่มีอยู่ก่อน (Ctrl+A แล้ว Backspace)
           editor.focus();
-          editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', ctrlKey: true, metaKey: true, bubbles: true }));
-          await sleep(200);
-          editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', keyCode: 8, bubbles: true }));
-          await sleep(500);
+          await sleep(300);
 
-          // ใช้ clipboard API + paste event (เหมือน Ctrl+V)
+          // ลบ caption เดิม: selectAll แล้ว paste ทับ (วิธีที่ทำงานกับ Draft.js)
+          document.execCommand('selectAll', false, null);
+          await sleep(300);
+
+          // paste ข้อความใหม่ทับข้อความที่เลือก
           try {
             await navigator.clipboard.writeText(text);
             await sleep(200);
@@ -182,35 +181,24 @@ const TikTokPoster = {
             await sleep(500);
 
             if (editor.textContent.includes(text.substring(0, 10))) {
-              return resolve({ success: true, method: 'clipboard+paste' });
-            }
-          } catch (e) {
-            // clipboard API อาจไม่ได้ permission
-          }
-
-          // Fallback: สร้าง paste event เอง
-          try {
-            const dt = new DataTransfer();
-            dt.setData('text/plain', text);
-            const pasteEvent = new ClipboardEvent('paste', {
-              clipboardData: dt,
-              bubbles: true,
-              cancelable: true,
-            });
-            editor.dispatchEvent(pasteEvent);
-            await sleep(500);
-
-            if (editor.textContent.includes(text.substring(0, 10))) {
-              return resolve({ success: true, method: 'pasteEvent' });
+              return resolve({ success: true, method: 'selectAll+paste' });
             }
           } catch (e) {}
 
-          // Fallback 2: ใช้ execCommand insertText (อาจ crash)
+          // Fallback: ลองอีกรอบด้วย ClipboardEvent
           try {
-            editor.focus();
-            document.execCommand('insertText', false, text);
-            await sleep(300);
-            return resolve({ success: true, method: 'insertText' });
+            document.execCommand('selectAll', false, null);
+            await sleep(200);
+            const dt = new DataTransfer();
+            dt.setData('text/plain', text);
+            editor.dispatchEvent(new ClipboardEvent('paste', {
+              clipboardData: dt, bubbles: true, cancelable: true,
+            }));
+            await sleep(500);
+
+            if (editor.textContent.includes(text.substring(0, 10))) {
+              return resolve({ success: true, method: 'selectAll+pasteEvent' });
+            }
           } catch (e) {}
 
           resolve({ success: false, error: 'ไม่สามารถใส่ caption ได้' });

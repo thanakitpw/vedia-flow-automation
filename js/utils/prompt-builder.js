@@ -98,9 +98,17 @@ const PromptBuilder = {
     template = template.replace(/\[product\]/g, productName || 'the product');
 
     // เพิ่มมุมกล้อง (ไม่ใช่ B-Roll)
-    if (cameraAngle && cameraAngle !== 'auto' && !isBroll) {
-      template += ` Camera angle: ${cameraAngle}.`;
+    if (!isBroll) {
+      if (cameraAngle && cameraAngle !== 'auto') {
+        template += ` Camera angle: ${cameraAngle}.`;
+      } else {
+        // auto = เลือกมุมกล้องให้เหมาะสมกับสินค้า
+        template += ` Choose the best camera angle that suits this product naturally.`;
+      }
     }
+
+    // เพิ่มพื้นหลัง
+    template += ' Choose a background setting that best suits and complements the product naturally.';
 
     // เพิ่ม CTA ตะกร้า (เฉพาะ mode ที่มีคนพูด)
     if (!isBroll) {
@@ -133,6 +141,9 @@ const PromptBuilder = {
 
     // แทนที่ [product]
     template = template.replace(/\[product\]/g, productName || 'the product');
+
+    // เพิ่มพื้นหลัง
+    template += ' Choose a background setting that best suits and complements the product naturally.';
 
     // Text overlay
     if (noText) {

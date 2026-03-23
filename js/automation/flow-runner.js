@@ -262,21 +262,27 @@ const FlowRunner = {
             await DOMHelpers.sleep(2000);
           }
 
-          // 16. ติ๊ก AI-generated
-          log(`[16] ติ๊ก AI-generated...`, 'info');
-          await TikTokPoster.setAIGeneratedFlag(ttTabId, true);
-          await DOMHelpers.sleep(1000);
+          // 16. ติ๊ก AI-generated (ถ้าไม่ได้ skip)
+          if (!settings.skipAIFlag) {
+            log(`[16] ติ๊ก AI-generated...`, 'info');
+            await TikTokPoster.setAIGeneratedFlag(ttTabId, true);
+            await DOMHelpers.sleep(1000);
+          } else {
+            log(`[16] ข้าม AI-generated (Skip mode)`, 'info');
+          }
 
           // 17. กด Post
           log(`[17] กด Post...`, 'info');
           await TikTokPoster.clickPost(ttTabId);
           log(`[17] ✅ กด Post สำเร็จ! 🚀`, 'success');
 
-          // รอ 60 วิ ให้ TikTok ประมวลผลเสร็จ แล้ว redirect กลับหน้า upload
-          log(`[17] รอ 60 วินาที ให้ TikTok ประมวลผล...`, 'info');
-          await DOMHelpers.sleep(60000);
-          await chrome.tabs.update(ttTabId, { url: TikTokPoster.uploadUrl });
-          log(`[17] กลับหน้า upload สำหรับสินค้าถัดไป`, 'info');
+          // รอ 10 วิ แล้วปิด tab TikTok (เปิดใหม่รอบหน้า)
+          log(`[17] รอ 10 วินาที...`, 'info');
+          await DOMHelpers.sleep(10000);
+          try {
+            await chrome.tabs.remove(ttTabId);
+            log(`[17] ปิด tab TikTok (เปิดใหม่รอบหน้า)`, 'info');
+          } catch (e) {}
 
         } catch (err) {
           log(`[11-17] ❌ ${err.message}`, 'error');
@@ -293,6 +299,16 @@ const FlowRunner = {
 
       // ลบ video blob จาก IndexedDB (ประหยัดพื้นที่)
       await BlobStorage.remove('current_video');
+
+      // ปิด tab Google Flow (เปิดใหม่สำหรับสินค้าถัดไป)
+      try {
+        const allTabs = await chrome.tabs.query({});
+        const flowTab = allTabs.find(t => t.url?.includes('labs.google/fx'));
+        if (flowTab) {
+          await chrome.tabs.remove(flowTab.id);
+          log(`ปิด tab Google Flow (เปิดใหม่รอบหน้า)`, 'info');
+        }
+      } catch (e) {}
 
       // หน่วงเวลาระหว่างสินค้า
       if (i < rows.length - 1 && !DOMHelpers.shouldStop) {

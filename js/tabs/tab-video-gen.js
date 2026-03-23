@@ -28,6 +28,7 @@ const TabVideoGen = {
     for (let i = 1; i <= 17; i++) {
       document.getElementById(`btn-t${i}`)?.addEventListener('click', () => this.runTestStep(i));
     }
+    document.getElementById('btn-t5b')?.addEventListener('click', () => this.testDownloadImage());
 
     // Mode buttons
     document.querySelectorAll('.mode-btn').forEach(btn => {
@@ -276,6 +277,7 @@ const TabVideoGen = {
       imageStyle: document.getElementById('vg-image-style')?.value || 'product_showcase',
       videoStyle: document.getElementById('vg-video-style')?.value || 'talk_ugc',
       videoWaitTime: videoWait,
+      skipAIFlag: document.getElementById('vg-skip-ai-flag')?.checked || false,
       isChannelMode: false,
     };
 
@@ -530,6 +532,43 @@ const TabVideoGen = {
     await FlowAutomation.clickGenerate(tabId);
     Logger.addLog('🧪 ✅ กด Generate แล้ว! รอสร้างภาพ...', 'success');
     showToast('กด Generate แล้ว!', 'success');
+  },
+
+  // 5.1 ดาวน์โหลดรูปที่เจนจาก Google Flow
+  async testDownloadImage() {
+    Logger.addLog('🧪 [5.1] ดาวน์โหลดรูปจาก Flow...', 'info');
+    try {
+      const tabId = await this._getFlowTab();
+
+      // ดึง URL รูปที่เจนจาก Feed
+      const genImgs = await FlowAutomation.getGeneratedImages(tabId);
+      const genSrcs = genImgs?.[0]?.result || [];
+
+      if (genSrcs.length === 0) {
+        showToast('ไม่พบรูปที่เจน - กดปุ่ม 5 ก่อน', 'warning');
+        return;
+      }
+
+      // ดาวน์โหลดทุกรูปที่เจน
+      for (let i = 0; i < genSrcs.length; i++) {
+        const url = genSrcs[i];
+        const filename = `vedia_image_${Date.now()}_${i + 1}.png`;
+
+        // ใช้ chrome.downloads API
+        await chrome.downloads.download({
+          url: url,
+          filename: filename,
+          saveAs: false,
+        });
+
+        Logger.addLog(`🧪 ✅ ดาวน์โหลดรูป ${i + 1}/${genSrcs.length}: ${filename}`, 'success');
+      }
+
+      showToast(`ดาวน์โหลด ${genSrcs.length} รูปสำเร็จ!`, 'success');
+    } catch (err) {
+      Logger.addLog(`🧪 ❌ Error: ${err.message}`, 'error');
+      showToast(`Error: ${err.message}`, 'error');
+    }
   },
 
   // 6. สลับ Video mode + เฟรม + 9:16
